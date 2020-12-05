@@ -1,0 +1,108 @@
+<div class="row">
+&nbsp;
+<form class="form-inline" name="frmFilter"> 
+	<div class="row">
+		<div class="col-xs-12 col-sm-12 col-md-12 col-12" style="border-left: 1px solid #e1e1e8;border-top: 1px solid #e1e1e8;border-right: 1px solid #e1e1e8;border-bottom: 1px solid #e1e1e8;padding: 5px 0px;">
+			<div class="form-group">
+				<a href="?view_mode=edit_clnd_events" class="btn btn-primary"><i class="glyphicon glyphicon-plus"></i> Добавить задачу</a>
+		 		&nbsp;
+			</div>
+			<div class="form-group">
+				<b>Фильтры:</b>
+			</div>
+			<div class="form-group">
+					<select name="calendar_category_id" class="form-control" onchange="this.form.submit();">
+						<option value="">Категория</option>
+						<option value="0"[#if CALENDAR_CATEGORY_ID="0"#] selected[#endif#]>Без категории</option>
+						[#begin CATEGORIES#]
+						<option value="[#ID#]"[#if ID="<#CALENDAR_CATEGORY_ID#>"#] selected[#endif#]>[#TITLE#]
+						[#end CATEGORIES#]
+					</select>
+			</div>
+			<div class="form-group">
+			<input autofocus placeholder="Название задачи" class="form-control" type="input" name="title" value="[#TITLE#]" >
+			</div>
+			<div class="form-group">
+					<select name="clnd_date_search" class="form-control" onchange="this.form.submit();">
+						<option value="">По датам</option>
+						<option value="0"[#if DATE_SEARCH="0"#] selected[#endif#]>Без ограничения</option>
+						<option value="1"[#if DATE_SEARCH="1"#] selected[#endif#]>Сегодня</option>
+						<option value="2"[#if DATE_SEARCH="2"#] selected[#endif#]>Ближайшие</option>
+						<option value="3"[#if DATE_SEARCH="3"#] selected[#endif#]>Недавние</option>
+					</select>
+			</div>
+		</div>
+	</div>
+</form>
+<table width=100% border=0>
+<tr>
+	<td valign=top>
+		<!-- results -->
+		[#if RESULT#]
+		<!-- paging -->
+		[#if PAGES#]
+				<ul class="pagination">
+				  [#begin PREVPAGE#]<li><a href="?view_mode=<#VIEW_MODE#>&mode=<#MODE#>&save_qry=1&page=[#NUM#]">&laquo;</a></li>[#end PREVPAGE#]
+   				  [#begin PAGES#]
+				  [#if !SELECTED#]<li><a href="?view_mode=<#VIEW_MODE#>&mode=<#MODE#>&save_qry=1&page=[#NUM#]">[#NUM#][#else#]<li class="active"><a href="#">[#NUM#]<span class="sr-only">(current)</span>[#endif#]</a></li>
+				 [#end PAGES#]				  
+				  [#begin NEXTPAGE#]<li><a href="?view_mode=<#VIEW_MODE#>&mode=<#MODE#>&save_qry=1&page=[#NUM#]">&raquo;</a></li>[#end NEXTPAGE#]				
+				</ul>
+
+		[#endif PAGES#]
+		<!-- / paging -->
+				<!-- search results (list) -->
+				<form action="?" method="post" name="frmList_clnd_events" style="padding:0px" class="form">
+				<table class="table table-striped">
+				<tr class="active">
+					<th>Срок</th>
+					<th>Задача </th>
+					<th>Детали</th>
+					<th>Категория </th>
+					<th>Опции</th>
+					<th class="text-right">Операции</th>
+				</tr>
+				<tbody>
+				[#begin RESULT#]
+				<tr [#if IS_DONE="1"#]class="success"[#endif IS_DONE#]>
+				<td width="130" align="left">[#DUE#]</td>
+				 <td><b>[#TITLE#]</b></td>
+				 <td>[#if NOTES!=""#]<span style="color: grey; font-style: italic;"> [#NOTES#]</span>[#else#]&nbsp;[#endif#]</td>
+				<td width="15%">[#if CATEGORY!=""#][#CATEGORY#][#else#]&nbsp;[#endif#]</td>
+				 <td nowrap>
+				[#if IS_DONE="1"#]<i style="font-size:20px; color:Darkgreen;" class="glyphicon glyphicon-ok" title="Готово"></i>[#else#]<i style="font-size:20px; color:lightgray;" class="glyphicon glyphicon-ok" title="Не готово"></i>[#endif IS_DONE#]
+				[#if IS_REMIND="1"#]<i style="font-size:20px; color:Darkorange;" class="glyphicon glyphicon-bell" title="Напоминание"></i>[#else#]<i style="font-size:20px; color:lightgray;" class="glyphicon glyphicon-bell" title="Не напоминать"></i>[#endif IS_REMIND#]
+				[#if AUTODONE="1"#]<i style="font-size:20px; color:orange;" class="glyphicon glyphicon-flash" title="Автозавершение"></i>[#else#]<i style="font-size:20px; color:lightgray;" class="glyphicon glyphicon-flash" title="Без Автозавершения"></i>[#endif AUTODONE#]
+				[#if IS_REPEATING="1"#]<i style="font-size:20px; color:black;" class="glyphicon glyphicon-repeat" title="Повторение"></i>[#else#]<i style="font-size:20px; color:lightgray;" class="glyphicon glyphicon-repeat" title="Без повторов"></i>[#endif IS_REPEATING#]
+				</td>
+
+				 <td width="1%" nowrap>
+				  <div>
+				  [#if "<#ACTION#>"=="admin"#]
+				   <a href="?view_mode=edit_clnd_events&id=[#ID#]" class="btn btn-default" title="Правка"><i class="glyphicon glyphicon-pencil"></i></a>
+				   <a href="?view_mode=delete_clnd_events&id=[#ID#]" onClick="return confirm('Вы уверены? Пожалуйста, подтвердите.')" class="btn btn-default" title="Удалить"><i class="glyphicon glyphicon-remove"></i></a>
+				  [#endif ACTION#]
+				  </div>
+				 </td>
+				</tr>
+				[#end RESULT#]
+				</tbody>
+				</table>
+				<input type="hidden" name="data_source" value="<#DATA_SOURCE#>">
+				<input type="hidden" name="view_mode" value="multiple_clnd_events">
+				</form>
+				<!-- / search results (list) -->
+		<!-- paging -->
+
+		<!-- / paging -->
+		[#else RESULT#]
+		<p>
+		<font color="red"><#LANG_NO_RECORDS_FOUND#></font>
+		</p>
+		[#endif RESULT#]
+		<!-- / results -->
+	</td>
+</tr>
+</table>
+
+</div>

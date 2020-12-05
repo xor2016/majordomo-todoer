@@ -1,0 +1,38 @@
+<ul class="nav nav-tabs">
+ <li [#if DATA_SOURCE!="clnd_events" && DATA_SOURCE!=""#][#else#]class="active"[#endif#]><a href="?data_source=clnd_events"><span class="glyphicon glyphicon-list-alt"></span> Все записи</a></li>
+ <li [#if DATA_SOURCE="clnd_full"#]class="active"[#endif#]><a href="?data_source=clnd_full"><span class="glyphicon glyphicon-calendar"></span> Календарь на год</a></li>
+ <li [#if DATA_SOURCE="clnd_categories"#]class="active"[#endif#]><a href="?data_source=clnd_categories"><span class="glyphicon glyphicon-inbox"></span> Категории</a></li>
+ <li [#if DATA_SOURCE="clnd_settings"#]class="active"[#endif#]><a href="?data_source=clnd_settings"><span class="glyphicon glyphicon-cog"></span> Настройки</a></li>
+ <li [#if DATA_SOURCE="catinfo"#]class="active"[#endif#]><a href="?data_source=catinfo"><span class="glyphicon glyphicon-info-sign"></span> Помощь</a></li>
+</ul>
+
+
+ [#if DATA_SOURCE="clnd_events" || DATA_SOURCE=""#] 
+
+ [#if VIEW_MODE="search_clnd_events" || VIEW_MODE=""#]
+  [#inc clnd_events_search_admin.html#]
+ [#endif VIEW_MODE#]
+
+ [#if VIEW_MODE="edit_clnd_events"#]
+   [#inc clnd_events_edit.html#]
+ [#endif VIEW_MODE#]
+
+[#endif DATA_SOURCE#]
+
+[#if DATA_SOURCE="clnd_categories"#] 
+
+ [#if VIEW_MODE="search_clnd_categories" || VIEW_MODE=""#]
+  [#inc clnd_categories_search_admin.html#]
+ [#endif VIEW_MODE#]
+ [#if VIEW_MODE="edit_clnd_categories"#]
+  [#inc clnd_categories_edit.html#]
+ [#endif VIEW_MODE#]
+
+
+[#endif DATA_SOURCE#]
+
+
+[#if DATA_SOURCE="clnd_full"#] 
+  [#inc clnd_full.html#]
+[#endif DATA_SOURCE#]
+
