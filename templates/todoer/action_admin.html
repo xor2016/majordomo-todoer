@@ -36,3 +36,9 @@
   [#inc clnd_full.html#]
 [#endif DATA_SOURCE#]
 
+[#if DATA_SOURCE="clnd_settings"#] 
+<br>
+<big><a href="/popup/todoer.html" class="btn btn-default" target=_blank><#LANG_PREVIEW#></a></big>
+<br><br>
+	[#module name="settings" action="admin" filter_name="TODOER"#]
+[#endif DATA_SOURCE#]

@@ -64,7 +64,7 @@
 				</tr>
 				<tbody>
 				[#begin RESULT#]
-				<tr [#if IS_DONE="1"#]class="success"[#endif IS_DONE#]>
+				<tr [#if IS_DONE="1"#]class="success"[#endif IS_DONE#][#if IS_DONE="2"#]class="danger"[#endif IS_DONE#]>
 				<td width="130" align="left">[#DUE#]</td>
 				 <td><b>[#TITLE#]</b></td>
 				 <td>[#if NOTES!=""#]<span style="color: grey; font-style: italic;"> [#NOTES#]</span>[#else#]&nbsp;[#endif#]</td>

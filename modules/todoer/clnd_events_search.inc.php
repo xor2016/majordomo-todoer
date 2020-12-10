@@ -7,6 +7,7 @@
   if ($this->owner->name=='panel') {
    $out['CONTROLPANEL']=1;
   }
+
   $qry="1";
   // search filters
   //searching 'TITLE' (varchar)
@@ -27,7 +28,7 @@ if($clnd_date_search != ""){
 		$qry.=" and TO_DAYS(DUE)<=TO_DAYS(NOW()) and TO_DAYS(END_TIME)>=TO_DAYS(NOW()) and IS_NODATE=0";
 		$out['DATE_SEARCH'] = 1;
 	}elseif($clnd_date_search == "2"){
-		$qry.=" and TO_DAYS(DUE)>=TO_DAYS(NOW()) and TO_DAYS(END_TIME)>=TO_DAYS(NOW()) and IS_NODATE=0 AND TO_DAYS(DUE)<=TO_DAYS(NOW())+ 7";
+		$qry.=" and TO_DAYS(DUE)>=TO_DAYS(NOW()) and TO_DAYS(END_TIME)>=TO_DAYS(NOW()) and IS_NODATE=0 AND TO_DAYS(DUE)<=TO_DAYS(NOW())+".SETTINGS_TODOER_SOONLIMIT;
 		$out['DATE_SEARCH'] = 2;
 	}elseif($clnd_date_search == "3"){
 		$qry.=" and TO_DAYS(DUE)<=TO_DAYS(NOW()) and IS_NODATE=0 AND TO_DAYS(DUE)>=TO_DAYS(NOW())- 7";
