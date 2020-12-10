@@ -1,3 +1,3 @@
-# majordomo-app_calendar
+# majordomo-ToDoer
 Пробую добавить время для событий/задач
 Напоминалку
