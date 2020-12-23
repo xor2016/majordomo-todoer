@@ -1,3 +1,8 @@
-		[#begin RESULT#]
-			[#TITLE#]
-		[#end RESULT#]
+
+[#if VIEW_MODE=""#]
+[#inc usual_list.html#]
+[#endif VIEW_MODE#]
+
+[#if VIEW_MODE="edit"#]
+[#inc usual_edit.html#]
+[#endif VIEW_MODE#]  

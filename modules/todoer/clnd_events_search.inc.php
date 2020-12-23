@@ -21,6 +21,11 @@
 	$out['CALENDAR_CATEGORY_ID']=(int)$calendar_category_id;
 	$qry.=" AND clnd_events.CALENDAR_CATEGORY_ID=".$out['CALENDAR_CATEGORY_ID'];
   }
+global $clnd_user;
+if($clnd_user != ""){
+	$out['CLND_USER']=(int)$clnd_user;
+	$qry.=" AND clnd_events.USER_ID=".$out['CLND_USER'];
+}
 global $clnd_date_search;
 if($clnd_date_search != ""){
 	if($clnd_date_search == "1"){
@@ -75,11 +80,16 @@ if($clnd_date_search != ""){
     // some action for every record if required
     if ($res[$i]['IS_NODATE'] == 1) {
      $res[$i]['DUE'] = '';
-    } elseif($res[$i]['ALL_DAY'] == 1) {
-	 $res[$i]['DUE'] = date('d.m.Y',strtotime($res[$i]['DUE']));
+	 $res[$i]['END_TIME'] = '';
+/*   
+	} elseif($res[$i]['ALL_DAY'] == 1) {
+	 $res[$i]['DUE'] = date('d.m.y',strtotime($res[$i]['DUE']));
+	 $res[$i]['END_TIME'] = '';
+*/
 	} else {
 	 //$res[$i]['DUE_TIME'] = date('H:i',strtotime($res[$i]['DUE']));
-     $res[$i]['DUE'] = date('d.m.Y H:i',strtotime($res[$i]['DUE']));
+     $res[$i]['DUE'] = date('d.m.y H:i',strtotime($res[$i]['DUE']));
+     $res[$i]['END_TIME'] = date('d.m.y H:i',strtotime($res[$i]['END_TIME']));
     }
    }
    $out['RESULT']=$res;
@@ -87,3 +97,7 @@ if($clnd_date_search != ""){
 	//Categories
 	$res = sqlselect("select * from clnd_categories");
 	$out['CATEGORIES'] = $res;
+	//Users
+	$res = sqlselect("select * from users");
+	$out['USERS'] = $res;
+

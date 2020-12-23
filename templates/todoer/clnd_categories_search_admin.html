@@ -3,10 +3,10 @@
   {
   var thisCheck = $(this);
   if (thisCheck.is(':checked')) {
-   var url="workdays=1&id=";
+   var url="holidays=2&id=";
    url=url+thisCheck.val();
   } else {
-   var url="workdays=0&calendar_color=0&id=";
+   var url="holidays=0&calendar_color=0&id=";
    url=url+thisCheck.val();
   }
   url= "/modules/todoer/todoer_update.php?" + url;
@@ -112,7 +112,7 @@ function SaveColor(selectObject,category_id)
 </style>
 
 <br>
-<a href="?view_mode=edit_clnd_categories&data_source=<#DATA_SOURCE#>" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i> Добавить категорию</a>
+<a href="?view_mode=edit_clnd_categories&data_source=<#DATA_SOURCE#>" class="btn btn-primary"><i class="glyphicon glyphicon-plus"></i> Добавить категорию</a>
 
 <br><br>
 
@@ -129,7 +129,7 @@ $('#tooltip').ready(function(){
 $('[data-toggle="tooltip"]').tooltip();
 });
 </script>
-<th class="text-center" style="width: 100px;">Иконка</th><th style="width: 100px;" class="text-center"><span id="tooltip" data-toggle="tooltip" title="Цвет рамки в Календаре на год">Цвет рамки</span></th><th>Категория</th><th style="width: 8%;" class="text-center"><span id="tooltip" data-toggle="tooltip" title="Отмеченной галочкой категории в которых хранятся праздники, являющиеся выходными">Праздники</span></th><th style="width: 8%;" class="text-center"><span id="tooltip" data-toggle="tooltip" title="Отмечайте категории галочкой в которых хранятся выходные, на которые перенесены рабочие дни">Рабочие</span></th><th class="text-center">Опции</th>
+<th class="text-center" style="width: 100px;">Иконка</th><th style="width: 100px;" class="text-center"><span id="tooltip" data-toggle="tooltip" title="Цвет рамки в Календаре на год">Цвет рамки</span></th><th>Категория</th><th style="width: 3%;" class="text-center"><span id="tooltip" data-toggle="tooltip" title="1 для выходных, 2 для рабочих">Праздники</span></th><th class="text-center">Опции</th>
 </tr>
 [#begin RESULT#]
 <tr>
@@ -144,8 +144,7 @@ $('[data-toggle="tooltip"]').tooltip();
 </select>
 </td>
 <td><b>[#TITLE#]</b></td>
-<td align="center"><input type="checkbox" name="holidays[#ID#]" class="checkbox holidays" value="[#ID#]" [#if HOLIDAYS==1#] checked [#endif HOLIDAYS#]></td>
-<td align="center"><input type="checkbox" name="workdays[#ID#]" class="checkbox workdays" value="[#ID#]" [#if WORKDAYS==1#] checked [#endif WORKDAYS#]></td>
+<td>[#HOLIDAYS#]</td>
 <td width="150" align="center">
  
   [#if "<#ACTION#>"=="admin"#]

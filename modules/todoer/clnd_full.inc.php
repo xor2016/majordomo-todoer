@@ -8,9 +8,9 @@
   }
 
 
-$year=(int)date('Y'); 
-$today_day=(int)date('j');
-$today_mon=(int)date('n');
+$year = (int)date('Y'); 
+$today_day = (int)date('j');
+$today_mon = (int)date('n');
 
 if ($m1>1 or $m2<12) 
  $mon_filt='month(DUE) between ' .(int)$m1 . ' and ' . (int)$m2 . ' and ';
@@ -22,7 +22,7 @@ $cat_days=SQLSelect("select clnd_events.*,day(DUE) as DAY,month(DUE) as MON,clnd
 
 $arHolidays=SQLSelect("select clnd_events.ID,day(DUE) as DAY,month(DUE) as MONTH, clnd_events.TITLE as HD_NAME from clnd_events inner join clnd_categories on clnd_events.calendar_category_id=clnd_categories.id where " . $mon_filt . "clnd_categories.HOLIDAYS=1 and  year(DUE)=" . $year );
 
-$arWorkdays=SQLSelect("select clnd_events.ID,day(DUE) as DAY,month(DUE) as MONTH from clnd_events inner join clnd_categories on clnd_events.calendar_category_id=clnd_categories.id where " . $mon_filt . "clnd_categories.WORKDAYS=1 and  year(DUE)=" . $year );
+$arWorkdays=SQLSelect("select clnd_events.ID,day(DUE) as DAY,month(DUE) as MONTH from clnd_events inner join clnd_categories on clnd_events.calendar_category_id=clnd_categories.id where " . $mon_filt . "clnd_categories.HOLIDAYS=2 and  year(DUE)=" . $year );
 
 
 

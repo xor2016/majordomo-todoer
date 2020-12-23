@@ -6,6 +6,12 @@
  <li [#if DATA_SOURCE="catinfo"#]class="active"[#endif#]><a href="?data_source=catinfo"><span class="glyphicon glyphicon-info-sign"></span> Помощь</a></li>
 </ul>
 
+[#if DATA_SOURCE="clnd_settings"#] 
+<br>
+<big><a href="<#ROOTHTML#>apps/todoer.html" class="btn btn-default" target=_blank><#LANG_PREVIEW#></a></big>
+<br><br>
+[#module name="settings" action="admin" filter_name="TODOER"#]
+[#endif DATA_SOURCE#]
 
  [#if DATA_SOURCE="clnd_events" || DATA_SOURCE=""#] 
 
@@ -36,9 +42,3 @@
   [#inc clnd_full.html#]
 [#endif DATA_SOURCE#]
 
-[#if DATA_SOURCE="clnd_settings"#] 
-<br>
-<big><a href="/popup/todoer.html" class="btn btn-default" target=_blank><#LANG_PREVIEW#></a></big>
-<br><br>
-	[#module name="settings" action="admin" filter_name="TODOER"#]
-[#endif DATA_SOURCE#]

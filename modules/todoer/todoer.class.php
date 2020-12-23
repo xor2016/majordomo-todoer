@@ -89,14 +89,12 @@ function getParams() {
 * @access public
 */
 function run() {
-	debmes('func run');
+
  global $session;
   $out=array();
   if ($this->action=='admin') {
-	debmes('this->admin');
    $this->admin($out);
   } else {
-	debmes('this->usual');
    $this->usual($out);
   }
   $this->checkSettings();
@@ -150,6 +148,12 @@ function run() {
     'TYPE'=>'yesno',
     'DEFAULT'=>'1'
     ),
+   array(
+    'NAME'=>'TODOER_SHOWMAINONLY', 
+    'TITLE'=>'Не показывать подчиненные задачи', 
+    'TYPE'=>'yesno',
+    'DEFAULT'=>'0'
+    ),
    );
 
 
@@ -186,10 +190,12 @@ function admin(&$out) {
   }
   if ($this->view_mode=='edit_clnd_events') {
    $this->edit_clnd_events($out, $this->id);
+   //$this->usual_edit($out, $this->id);
   }
   if ($this->view_mode=='delete_clnd_events') {
    $this->delete_clnd_events($this->id);
-   $this->redirect("?");
+   //$this->redirect("?");
+	$this->redirect("?data_source=clnd_events");
   }
  }
  if ($this->data_source=='clnd_categories') {
@@ -197,9 +203,31 @@ function admin(&$out) {
    $this->search_clnd_categories($out);
   }
 }
+ if ($this->view_mode=='delete_past_events') {
+   $this->delete_past_events();
+   $this->redirect("?data_source=clnd_events");
+  }
+ if ($this->view_mode=='delete_done_tasks') {
+   $this->delete_done_tasks();
+   $this->redirect("?data_source=clnd_events");
+  }
+
  if ($this->data_source=='clnd_full') {
    $this->calendar_full($out);
 }
+
+ if ($this->data_source=='clnd_categories') {
+  if ($this->view_mode=='' || $this->view_mode=='search_clnd_categories') {
+   $this->search_clnd_categories($out);
+  }
+  if ($this->view_mode=='edit_clnd_categories') {
+   $this->edit_clnd_categories($out, $this->id);
+  }
+  if ($this->view_mode=='delete_clnd_categories') {
+   $this->delete_clnd_categories($this->id);
+   $this->redirect("?data_source=clnd_categories");
+  }
+ }
 
 }
 /**
@@ -210,20 +238,103 @@ function admin(&$out) {
 * @access public
 */
 function usual(&$out) {
-	debmes('func usual');
-	//$this->admin($out);
-	$this->frontend($out);
+ if ($this->view_mode=='edit') {
+  $this->usual_edit($out,$id);
+ }
+
+ if ($this->view_mode=='') {
+  
+
+  if ($this->mode=='is_done') {
+   global $id;
+   $this->task_done($id,1);
+   $this->redirect("?");
+  }
+
+  if ($this->mode=='reset_done') {
+   global $id;
+
+   $rec=SQLSelectOne("SELECT * FROM clnd_events WHERE ID='".(int)$id."'");
+   $rec['IS_DONE']=0;
+   $rec['IS_BEGIN'] = ( time()< strtotime($rec['DUE']))?0:$rec['IS_BEGIN'];
+
+   SQLUpdate('clnd_events', $rec);
+
+   $this->redirect("?");
+  }
+
+  $this->calendar_full($out);
+  $hidetask = "";
+if(SETTINGS_TODOER_SHOWMAINONLY){
+	$hidetask = " and clnd_events.parent_id=0";
 }
 
-function frontend(&$out)
-{
-    debmes('func frontend');
-    $table_name = 'clnd_events';
-    $res = SQLSelect("SELECT * FROM $table_name ORDER BY name");
-    if($res[0]['ID']) {
-        $out['RESULT'] = $res;
-    }
+  $events_today = SQLSelect("SELECT  DATE_FORMAT( clnd_events.due, '%d.%m.%y %H:%i' ) due_time, DATE_FORMAT( clnd_events.end_time,'%d.%m.%y %H:%i' ) end_time_frmt,clnd_events.*, clnd_categories.ICON, (SELECT COUNT( d.ID ) FROM clnd_events d WHERE d.parent_id = clnd_events.id ) IS_MAIN,clnd_categories.title CAT_NAME FROM clnd_events left join clnd_categories on clnd_events.calendar_category_id=clnd_categories.id  WHERE TO_DAYS(DUE)<=TO_DAYS(NOW()) and END_TIME>=NOW() and IS_NODATE=0 AND IS_DONE=0 AND ifnull(AT_CALENDAR,1)!=0 $hidetask ORDER BY DUE");
+
+  if ($events_today) {
+   $out['EVENTS_TODAY']=$events_today;
+   $out['EVENTS_TODAY_REC_COUNT'] = count($events_today);
+  }
+
+  if ($events_today) {
+   $out['EVENTS_TODAY']=$events_today;
+  }
+//no date with progress
+$events_nodate = SQLSelect("SELECT DATE_FORMAT( clnd_events.due, '%H:%i' ) due_time, clnd_events . * , clnd_categories.ICON, (SELECT COUNT( d.ID ) FROM clnd_events d WHERE d.parent_id = clnd_events.id ) IS_MAIN, (  SELECT round(SUM( c.IS_DONE ) * 100 / COUNT( c.ID )) FROM clnd_events c WHERE c.PARENT_ID = clnd_events.ID ) PR,clnd_categories.title CAT_NAME FROM clnd_events clnd_events LEFT JOIN clnd_categories ON clnd_events.calendar_category_id = clnd_categories.id WHERE IS_NODATE=1 AND IS_DONE=0 AND ifnull(AT_CALENDAR,1)!=0 $hidetask ORDER BY TITLE");
+
+  if ($events_nodate) {
+   $out['EVENTS_NODATE']=$events_nodate;
+   $out['EVENTS_NODATE_REC_COUNT'] = count ($events_nodate);
+  }
+//tomoroow
+  $events_tomorrow = SQLSelect("SELECT  DATE_FORMAT( clnd_events.due, '%d.%m.%y %H:%i' ) due_time,DATE_FORMAT( clnd_events.end_time,'%d.%m.%y %H:%i' ) end_time_frmt, clnd_events.*,clnd_categories.ICON, (SELECT COUNT( d.ID ) FROM clnd_events d WHERE d.parent_id = clnd_events.id ) IS_MAIN,clnd_categories.title CAT_NAME FROM clnd_events left join clnd_categories on clnd_events.calendar_category_id=clnd_categories.id  WHERE  (TO_DAYS(DUE)=TO_DAYS(NOW())+1 or TO_DAYS(END_TIME)=TO_DAYS(NOW())+1) and IS_NODATE=0 AND IS_DONE=0 AND ifnull(AT_CALENDAR,1)!=0 $hidetask ORDER BY DUE");
+
+  if ($events_tomorrow) {
+   $out['EVENTS_TOMORROW']=$events_tomorrow;
+   $out['EVENTS_TOMORROW_REC_COUNT'] = count($events_tomorrow);
+  }
+////////////////////////////////////////////////////////////////////////
+if (SETTINGS_TODOER_SOONLIMIT) {
+  $soon_limit = SETTINGS_TODOER_SOONLIMIT;
+}else{
+  $soon_limit = 14;
 }
+  $events_after = SQLSelect("SELECT DATE_FORMAT( clnd_events.due, '%d.%m.%y %H:%i' ) due_time, DATE_FORMAT( clnd_events.due, '%d.%m.%y' ) due_date, DATE_FORMAT( clnd_events.end_time,'%d.%m.%y %H:%i' ) end_time_frmt, clnd_events.*,clnd_categories.ICON, (SELECT COUNT( d.ID ) FROM clnd_events d WHERE d.parent_id = clnd_events.id ) IS_MAIN,clnd_categories.title CAT_NAME FROM clnd_events left join clnd_categories on clnd_events.calendar_category_id=clnd_categories.id  WHERE  TO_DAYS(DUE)>=TO_DAYS(NOW())+2 and TO_DAYS(END_TIME)>=TO_DAYS(NOW())+2 and IS_NODATE=0 AND IS_DONE=0 and TO_DAYS(DUE)<=TO_DAYS(NOW())+ $soon_limit  AND ifnull(AT_CALENDAR,1)!=0 $hidetask ORDER BY DUE");
+
+  if ($events_after) {
+   $out['EVENTS_AFTER']=$events_after;
+   $out['EVENTS_AFTER_REC_COUNT'] = count ($events_after);
+  }
+//просроченная задача
+  $events_overdue = SQLSelect("SELECT DATE_FORMAT( clnd_events.due, '%d.%m.%y %H:%i' ) due_time, DATE_FORMAT( clnd_events.end_time,'%d.%m.%y %H:%i' ) end_time_frmt, clnd_events.*,clnd_categories.ICON,clnd_categories.title CAT_NAME FROM clnd_events left join clnd_categories on clnd_events.calendar_category_id=clnd_categories.id  WHERE IS_DONE=2 AND ((ifnull(AT_CALENDAR,1)!=0 AND holidays=0) or clnd_categories.title is null)  ORDER BY DUE");
+
+  if ($events_overdue) {
+   $out['EVENTS_OVERDUE']=$events_overdue;
+   $out['EVENTS_OVERDUE_REC_COUNT'] = count ($events_overdue);
+  }
+//все записи
+  $events_all = SQLSelect("SELECT  case when IS_NODATE=0 and ALL_DAY=0 then DATE_FORMAT( clnd_events.due, '%d.%m.%y %H:%i' ) else null end  due_time,case when IS_NODATE=0 and ALL_DAY=1 then DATE_FORMAT( clnd_events.due, '%d.%m.%y весь день' ) else null end due_date, DATE_FORMAT( clnd_events.end_time, '%d.%m.%y %H:%i' ) end_time_frmt, clnd_events.*,clnd_categories.ICON,clnd_categories.title CAT_NAME  FROM clnd_events left join clnd_categories on clnd_events.calendar_category_id=clnd_categories.id  WHERE 1=1 ORDER BY IS_NODATE desc, DUE desc");
+
+  if ($events_all) {
+   $out['EVENTS_ALL']=$events_all;
+   //$out['EVENTS_ALL_REC_COUNT'] = count ($events_all);
+  }
+
+  if (SETTINGS_TODOER_SHOWDONE == '1') {
+   $out['SHOWDONE'] = 1;
+   $recently_done=SQLSelect("SELECT  DATE_FORMAT( clnd_events.due, '%d.%m.%y %H:%i' ) as due_time, DATE_FORMAT( clnd_events.end_time,'%d.%m.%y %H:%i' ) end_time_frmt, clnd_events.*, clnd_categories.ICON,clnd_categories.title CAT_NAME FROM clnd_events left join clnd_categories on clnd_events.calendar_category_id=clnd_categories.id  WHERE (IS_DONE=1 AND TO_DAYS(NOW())-TO_DAYS(DONE_WHEN)<=1) OR (IS_REPEATING=1 AND NOW() between END_TIME and DUE)")  ;
+   if ($recently_done) {
+    $out['RECENTLY_DONE']=$recently_done;
+    $out['RECENTLY_DONE_REC_COUNT'] = count($recently_done);
+   }
+  }
+
+  $out['CATEGORIES'] = SQLSelect("SELECT * from clnd_categories ORDER BY TITLE");
+
+ }//$this->view_mode==''
+}
+
+
 /**
 * clnd_events search
 *
@@ -238,264 +349,11 @@ function frontend(&$out)
 * @access public
 */
  function edit_clnd_events(&$out, $id) {
-  global $title;
-  global $id;
-
-  if ($id) {
-	$rec=SQLSelectOne("SELECT * FROM clnd_events WHERE ID='".(int)$id."'");
-
-	if ($this->mode=='delete') {
-		SQLExec("DELETE FROM clnd_events WHERE ID='".(int)$rec['ID']."'");
-		//освободим подчиненные задачи
-		SQLExec("UPDATE clnd_events SET PARENT_ID=0 WHERE PARENT_ID='".$rec['ID']."'");
-	$this->redirect("?");
+	require(dirname(__FILE__).'/clnd_events_edit.inc.php');
 }
-
-  } else { 
-	//add new by title
-	$out['TITLE']=$title;
-	$out['DUE'] = date('Y-m-d H:i:00');
-	$out['END_TIME'] = date('Y-m-d H:i:00');
-	$out['REMIND_TIME']= date('Y-m-d H:i:00');
-	//$out['IS_TASK'] = 0;
-	$out['IS_NODATE'] = 0;
-	$out['ALL_DAY'] = 0;
-	$out['IS_REPEATING'] = 0;
-	$out['LOG'] = '';
-
-  }
-
-  if ($this->mode=='update') {
-   $ok=1;
-
-   global $is_task;
-   global $notes;
-
-   $rec['TITLE']=$title;
-
-   if (!$rec['TITLE']) {
-    $ok=0;
-    $out['ERR_TITLE']=1;
-   }
-
-   //$rec['IS_TASK']=(int)$is_task;
-   $rec['NOTES']=$notes;
-
-   global $due; //начало события 
-   $rec['DUE'] = $due;
-   if (!$rec['DUE'] ) {
-    $rec['DUE'] = date('Y-m-d H:i'.':00',time()+60);
-   }
-
-   global $end_time; //конец события
-   $rec['END_TIME'] = $end_time;
-   if (!$rec['END_TIME']) {
-    $rec['END_TIME']=$rec['DUE'];
-   }
-   
-   global $is_repeating;//признак повтора
-   $rec['IS_REPEATING']=(int)$is_repeating;
-
-   //global $is_repeating_after;//рудимент?
-   //$rec['IS_REPEATING_AFTER']=(int)$is_repeating_after;
-   global $repeat_in;
-   $rec['REPEAT_IN']=(int)$repeat_in;
-
-   global $repeat_type;
-   $rec['REPEAT_TYPE']=(int)$repeat_type;
-   
-   global $is_done;//признак закрытия
-   if ($is_done == "1" && $rec['IS_DONE'] != "1") {
-    $marked_done = 1; 
-	$rec['IS_BEGIN'] = 1; 
-   }
-   if ($is_done == "0"  && $rec['IS_DONE'] == "1") {//переоткроем закрытую задачу
-    //$rec['IS_BEGIN'] = 0; 
-	$rec['IS_BEGIN'] = ( time()< strtotime($rec['DUE']))?0:$rec['IS_BEGIN'];
-   }
-
-
-   $rec['IS_DONE']=(int)$is_done;
-
-   global $is_nodate; //сложно - без указания даты - всегда - спец. обработка(
-   $rec['IS_NODATE']=(int)$is_nodate;
-   if ($is_nodate) {
-    $rec['IS_REPEATING']=0; //ignore sets
-    $rec['ALL_DAY']=0;      
-   }
-
-   global $all_day; //на весь день - с 00:00 до 23:59
-   $rec['ALL_DAY'] = (int)$all_day;
-   if($all_day){
-     $rec['DUE'] = date('Y-m-d',strtotime($rec['DUE'])).' 00:00:00';
-     $rec['END_TIME'] = date('Y-m-d',strtotime($rec['END_TIME'])).' 23:59:00';
-   }
-
-   global $user_id;
-   $rec['USER_ID']=(int)$user_id;
-
-   global $calendar_category_id;
-   $rec['CALENDAR_CATEGORY_ID']=(int)$calendar_category_id;
-/*	
-   global $done_script_id;
-   $rec['DONE_SCRIPT_ID']=(int)$done_script_id;
-*/
-   global $done_code;//код при закрытии задачи (is_done ставится в 1)
-   $rec['DONE_CODE'] = $done_code;
-
-   global $is_remind; //напоминание есть
-   $rec['IS_REMIND'] = (int)$is_remind; 
-
-   global $remind_time; //его время рассчитанное/указаное
-   $rec['REMIND_TIME'] = $remind_time;
-   if (!$rec['REMIND_TIME'] && $is_remind ) {
-     $rec['REMIND_TIME'] = $rec['DUE']; //todo
-   }
-
-   global $remind_type; // сказать/выполнить код
-   $rec['REMIND_TYPE'] = $remind_type;
-
-   global $remind_code; //код напоминания
-   $rec['REMIND_CODE'] = $remind_code;
-
-   global $week_days;//дни недели для повторов
-   $rec['WEEK_DAYS'] = @implode(',', $week_days);
-   if (is_null($rec['WEEK_DAYS'])) {
-        $rec['WEEK_DAYS'] = '';
-    }
-
-   global $y_months;//месяцы для повторов
-   $rec['YE_MONTHS'] = @implode(',', $y_months);
-   if (is_null($rec['YE_MONTHS'])) {
-        $rec['YE_MONTHS'] = '';
-    }
-
-   global $autodone; //признак автоматическое завершение при старте задачи
-   $rec['AUTODONE'] = $autodone;
- 
-   global $remind_in;//напомнить за remind_in мин/час/дней ???
-   $rec['REMIND_IN'] = $remind_in;
-
-   global $remind_timer; // 0..10 мин/час/дней/как явно указано в REMIND_TIME
-   $rec['REMIND_TIMER'] = $remind_timer;
-   if($remind_timer < 10) {  
-     $delta = array(0 => 5*60,
-                  1 => 15*60,
-                  2 => 30*60,
-                  3 => 45*60,
-                  4 => 60*60,
-                  5 => 2*60*60,
-                  6 => 8*60*60,
-                  7 => 12*60*60,
-                  8 => 24*60*60,
-                  9 => 48*60*60,
-                  );
-     $remd = strtotime($rec['DUE']) - $delta[$remind_timer];
-     if($remd < time()) $remd = $remd + 60; //must be in future
-	 if($rec['REMIND_TIMER'] > 7 || $rec['ALL_DAY']){//напоминания для Напомнить за день - в стандартное время
-		$standart_remind_time = (SETTINGS_TODOER_STD_REMIND)?SETTINGS_TODOER_STD_REMIND:"12:00";
-		$remd = strtotime(date('Y-m-d H:i:00', strtotime(date('Y-m-d')." ".$standart_remind_time.":00"),$remd));
-	 }
-     $rec['REMIND_TIME'] = date('Y-m-d H:i'.':00',$remd);
-
-   }
-   global $parent_id;//главная задача
-   $rec['PARENT_ID'] = $parent_id;
-
-   global $autodone_by_childs;//для главной - автоматическое завершение по готовности подзадач
-   $rec['AUTODONE_BY_CHILDS'] = $autodone_by_childs;
-
-   global $log;
-   $rec['LOG'] = $log;
-
-   global $is_repeat_until;//признак проверки окончания повторов
-   $rec['IS_REPEAT_UNTIL'] = $is_repeat_until;
-
-   global $repeat_until;//повторять до
-   $rec['REPEAT_UNTIL'] = $repeat_until;
-
-   global $begin_code;//код, выполняющийся при старте задачи
-   $rec['BEGIN_CODE'] = $begin_code;
-
-   global $is_cron;//признак использования синтаксиса Крона для повторов
-   $rec['IS_CRON'] = $is_cron;
-
-   global $repeat_cron;//строка синтаксиса Крона для повторов
-   $rec['REPEAT_CRON'] = $repeat_cron;
-
-////////////////////////////////
+ function usual_edit(&$out, $id) {
+ 	require(dirname(__FILE__).'/clnd_events_edit.inc.php');
 }
-   if ($ok) {
-    if ($rec['ID']) {
-     SQLUpdate('clnd_events', $rec);
-    } else {
-     $rec['ADDED']=date('Y-m-d H:i:s');
-     $rec['ID']=SQLInsert('clnd_events', $rec);
-    }
-    if ($marked_done) {
-     $this->task_done($rec['ID'],1);
-    }
-
-    $this->redirect("?");
-   }
-
-
-  //}
-
-
-  outHash($rec, $out);
-  $out['DONE_WHEN'] = date('d.m.Y H:i:00',strtotime($rec['DONE_WHEN']));
-  $out['USERS'] = SQLSelect("SELECT * FROM users ORDER BY NAME");
-  //$out['LOCATIONS']=SQLSelect("SELECT * FROM gpslocations ORDER BY TITLE");
-  //$out['SCRIPTS'] = SQLSelect("SELECT ID, TITLE FROM scripts ORDER BY TITLE");
-  $out['CALENDAR_CATEGORIES'] = SQLSelect("SELECT ID, TITLE from clnd_categories ORDER BY TITLE");
-//обработка дней недели
-$w_days = array();
-if ($rec['WEEK_DAYS']!=='') {
-  $w_days = explode(',', $rec['WEEK_DAYS']);
-}
-
-$days = array( 1=>"Пн","Вт","Ср","Чт","Пт","Сб","Вс");
-	for ($i = 1; $i < 8; $i++) {
-	    $out['WDAYS'][] = array(
-	         'VALUE'    => $i,
-	         'DNAME'    => $days[$i],
-	         'SELECTED' => (in_array($i, $w_days))?1:0,
-	   );
-	}
-
-//обработка месяцев года
-$y_months = array();
-if ($rec['YE_MONTHS']!=='') {
-  $y_months = explode(',', $rec['YE_MONTHS']);
-}
-$months = array(1=>"Янв","Фев","Мар","Апр","Май","Июн","Июл","Авг","Сен","Окт","Ноя","Дек");
-	for ($i = 1; $i < 13; $i++) {
-	    $out['YMONTHS'][] = array(
-	         'VALUE'    => $i,
-	         'MNAME'    => $months[$i],
-	         'SELECTED' => (in_array($i, $y_months))?1:0,
-	   );
-	}
-
-  if ($out['ID']) {
-    //подчиненные задачи + признак просрочки - overdue
-    $out['OTHERS'] = SQLSelect("SELECT ID, TITLE, IS_DONE, case when DUE < NOW() AND END_TIME< NOW() AND IS_DONE=0 AND IS_NODATE=0 then '1' else '0' end  OVERDUE FROM clnd_events WHERE PARENT_ID=".$out['ID']." ORDER BY TITLE");
-    $out['OTHERS_REC_COUNT'] = count($out['OTHERS']);
-    //progress main ???
-    if($out['OTHERS_REC_COUNT']>0) {
-      $rec = SQLSelectOne( "SELECT sum(IS_DONE)*100/count(ID) PR FROM clnd_events WHERE PARENT_ID=".$out['ID']);
-      $out['PROGRESS'] = round($rec['PR']);
-    }else{
-      $out['PROGRESS'] = 0;
-    }
-	//список задач для выбора главной 
-    $out['FOR_LINKED_TASKS'] = SQLSelect("SELECT clnd_events.`ID`, clnd_events.`TITLE`,clnd_events.`DUE`,clnd_events.`PARENT_ID` ,clnd_categories.ICON FROM clnd_events left join clnd_categories on clnd_events.calendar_category_id=clnd_categories.id WHERE (`IS_DONE`=0 or `IS_REPEATING`=1) and clnd_events.`ID`<>".$out['ID']." order by `TITLE`");
-
-    
-  }
-}
-
 /** ???? 
 * clnd_events delete record
 *
@@ -516,7 +374,14 @@ $months = array(1=>"Янв","Фев","Мар","Апр","Май","Июн","Июл
  function search_clnd_categories(&$out) {
   require(dirname(__FILE__).'/clnd_categories_search.inc.php');
  }
-
+/**
+* calendar_categories edit/add
+*
+* @access public
+*/
+ function edit_clnd_categories(&$out, $id) {
+  require(DIR_MODULES.$this->name.'/clnd_categories_edit.inc.php');
+ }
 /**
 * Title
 *
@@ -538,20 +403,23 @@ $months = array(1=>"Янв","Фев","Мар","Апр","Май","Июн","Июл
 	$tm = time();
 	if( strlen($rec['LOG']) > 100) $rec['LOG'] = "..."; //обрежем лог
 
-	if(SETTINGS_TODOER_LOGGING && $rec['IS_BEGIN']==0) debmes('IS_BEGIN = 0 for doned task "'.$rec['TITLE'].'" ','todoer');
+	//if(SETTINGS_TODOER_LOGGING && $rec['IS_BEGIN']==0) debmes('IS_BEGIN = 0 for doned task "'.$rec['TITLE'].'" ','todoer');
 
 	if($autoend == "0"){ //завершилась по времени окончания без признака готовности (для нового повтора)
 		if($rec['IS_REPEATING']){
 			$rec['DONE_WHEN'] = null;
 			$rec['IS_DONE'] = 0;
+			$rec['IS_BEGIN'] = 0; //перезапустим всю задачу
 			if(SETTINGS_TODOER_LOGGING) debmes('repeated task "'.$rec['TITLE'].'" ended but not marked done','todoer');
 			$rec['LOG'] .= date('d.m.y H:i:s', $tm).' - завершено без исполнения.';
+			
 		}else{//просрочено
 			$rec['DONE_WHEN'] = null;
 			$rec['IS_DONE'] = 2;
 			$flag_done = 2; 
 			if(SETTINGS_TODOER_LOGGING) debmes('task "'.$rec['TITLE'].'" is overdue','todoer');
 			$rec['LOG'] .= date('d.m.y H:i:s', $tm).' - просрочено.';
+
 		}
 	}else{ //задача была выполнена
 		$rec['DONE_WHEN'] = date('Y-m-d H:i:s', $tm);
@@ -566,92 +434,94 @@ $months = array(1=>"Янв","Фев","Мар","Апр","Май","Июн","Июл
 		$flag_done = 0;
 		$due_time = strtotime(date('Y-m-d H:i:00',strtotime($rec['DUE']))); //unixtime
 		$end_time = strtotime(date('Y-m-d H:i:00',strtotime($rec['END_TIME']))); //unixtime
-		
-		//if(!$due_time) $due_time = $rec['ALL_DAY']?(strtotime(date('Y-m-d')." 00:00:00",$tm)):$tm;
-		//if(!$end_time) $end_time = $rec['ALL_DAY']?(strtotime(date('Y-m-d')." 23:59:00"),$tm)):$due_time;
+		if($end_time < $due_time) $end_time = $rec['ALL_DAY']?(strtotime(date('Y-m-d')." 23:59:00",$tm)):$due_time; //fix end_time
+
 		$repeat_in = $rec['REPEAT_IN']?$rec['REPEAT_IN']:1;
 
 		//найдем длительность для определения нового end_time
 		$duration = $end_time - $due_time;
 		$part_due = date_parse($rec['DUE']);
 
-	if($rec['IS_CRON'] == 1){
-		//calc new due by cron
-		if(!$rec['REPEAT_CRON']) {
-			debmes('Bad Cron line in task id ='. $id,'todoer');
-			return;
-		}
-		$cron_due = parse_cr($rec['REPEAT_CRON'], $due_time + 60); //todo - check it!
-		$new_due = date('Y-m-d H:i:00', $cron_due);
-		$new_end = date('Y-m-d H:i:00', $$cron_due + $duration);
+		if($rec['IS_CRON'] == 1){
+			//calc new due by cron
+			if(!$rec['REPEAT_CRON']) {
+				debmes('Bad Cron line in task id ='. $id,'todoer');
+				return;
+			}
 
-	}else{
-		if ($rec['REPEAT_TYPE'] == 1) {//годы
-			// yearly task
-			$due_time_next_year = mktime($part_due['hour'], $part_due['minute'], 0, $part_due['month'], $part_due['day'], $part_due['year']+$repeat_in*1);
-			$new_due = date('Y-m-d H:i:00', $due_time_next_year);
-			$new_end = date('Y-m-d H:i:00', $due_time_next_year + $duration);
-		} elseif ($rec['REPEAT_TYPE'] == 2) {//месяцы
-			// monthly task
-			$time_next_month = $due_time + $repeat_in*31*24*60*60;
-			$due_time_next_month = mktime($part_due['hour'], $part_due['minute'], 0, date('m', $time_next_month), $part_due['day'], date('Y', $time_next_month));
-			$new_due = date('Y-m-d H:i:00', $due_time_next_month);
-			$new_end = date('Y-m-d H:i:00', $due_time_next_month + $duration);
+			$cron_due = $this -> parse_cron_str($rec['REPEAT_CRON'],time() + 60 ); //todo - check it!
+			$new_due = date('Y-m-d H:i:00', $cron_due);
+			$new_end = date('Y-m-d H:i:00', $cron_due + $duration);
 	
-	   } elseif ($rec['REPEAT_TYPE'] == 3) {//недели
-	     if(!$rec['WEEK_DAYS']){
-		       // weekly task
-		      $due_time_next_week = $due_time + 7*24*60*60;
-		      $new_due = date('Y-m-d H:i:00', $due_time_next_week);
-		      $new_end = date('Y-m-d H:i:00', $due_time_next_week + $duration);
-		
-		      $rec['WEEK_DAYS'] = date("N", $due_time_next_week);//запишем на будущее чтобы галочка стояла(?)
-	     }else{
-	       //задача назначена на пн, вт 
-	       //если задача пн закрыта во вт, то следующий срок - пн
-	       $week_days = array();
-		   if ($rec['WEEK_DAYS'] !== '') $week_days = explode(',', $rec['WEEK_DAYS']);
-	       $dd = $tm;
-	       $due = date("N", $dd); //переведём в формат пн=1...вс=7
-	       for($i = 0; $i < 7;$i++){
-	         $dd = $dd + $repeat_in*24*60*60; //след. дата
-	         $due = $due + 1;
-	         if($due > 7) $due = 1;
-	         if(in_array($due, $week_days)) { //первый следующий запуск
-	           //$next = $dd;
-	           break;
-	         }
-	       }
-	       $due_time_next_week = mktime($part_due['hour'],$part_due['minute'],0, date('m', $dd), date('j', $dd), date('Y', $dd));
-	       $new_due = date('Y-m-d H:i:00', $due_time_next_week);
-	       $new_end = date('Y-m-d H:i:00', $due_time_next_week + $duration);
-	     }
-	   } elseif ($rec['REPEAT_TYPE'] == 4) {//дни
-	       $due_time_next_day = $due_time + $repeat_in*24*60*60;
-			while ($due_time_next_day <= $tm){ //in future only!
-				$due_time_next_day = $due_time + $repeat_in*24*60*60;
-			}
-	       $new_due = date('Y-m-d H:i:00', $due_time_next_day);
-	       $new_end = date('Y-m-d H:i:00', $due_time_next_day + $duration);
-	
-	   } elseif ($rec['REPEAT_TYPE'] == 5) {//часы
+		}else{
 			
-	       $due_time_next_hour = $due_time + $repeat_in*60*60;
-			while ($due_time_next_hour <= $tm){ //in future only!
-				$due_time_next_hour = $due_time + $repeat_in*60*60;
-			}
-	       $new_due = date('Y-m-d H:i:00', $due_time_next_hour);
-	       $new_end = date('Y-m-d H:i:00', $due_time_next_hour + $duration);
-	
-	   } elseif ($rec['REPEAT_TYPE'] == 6) {//минуты
-			$due_time_next_minute = $due_time + $repeat_in*60;
-			while ($due_time_next_minute <= $tm){ //in future only!
+			if ($rec['REPEAT_TYPE'] == 1) {//годы
+				// yearly task
+				$due_time_next_year = mktime($part_due['hour'], $part_due['minute'], 0, $part_due['month'], $part_due['day'], $part_due['year']+$repeat_in*1);
+				$new_due = date('Y-m-d H:i:00', $due_time_next_year);
+				$new_end = date('Y-m-d H:i:00', $due_time_next_year + $duration);
+			} elseif ($rec['REPEAT_TYPE'] == 2) {//месяцы
+				// monthly task
+				$time_next_month = $due_time + $repeat_in*31*24*60*60;
+				$due_time_next_month = mktime($part_due['hour'], $part_due['minute'], 0, date('m', $time_next_month), $part_due['day'], date('Y', $time_next_month));
+				$new_due = date('Y-m-d H:i:00', $due_time_next_month);
+				$new_end = date('Y-m-d H:i:00', $due_time_next_month + $duration);
+		
+		   } elseif ($rec['REPEAT_TYPE'] == 3) {//недели
+		     if(!$rec['WEEK_DAYS']){
+			       // weekly task
+			      $due_time_next_week = $due_time + 7*24*60*60;
+			      $new_due = date('Y-m-d H:i:00', $due_time_next_week);
+			      $new_end = date('Y-m-d H:i:00', $due_time_next_week + $duration);
+			
+			      $rec['WEEK_DAYS'] = date("N", $due_time_next_week);//запишем на будущее чтобы галочка стояла(?)
+		     }else{
+		       //задача назначена на пн, вт 
+		       //если задача пн закрыта во вт, то следующий срок - пн
+		       $week_days = array();
+			   if ($rec['WEEK_DAYS'] !== '') $week_days = explode(',', $rec['WEEK_DAYS']);
+		       $dd = $tm;
+		       $due = date("N", $dd); //переведём в формат пн=1...вс=7
+		       for($i = 0; $i < 7;$i++){
+		         $dd = $dd + $repeat_in*24*60*60; //след. дата
+		         $due = $due + 1;
+		         if($due > 7) $due = 1;
+		         if(in_array($due, $week_days)) { //первый следующий запуск
+		           //$next = $dd;
+		           break;
+		         }
+		       }
+		       $due_time_next_week = mktime($part_due['hour'],$part_due['minute'],0, date('m', $dd), date('j', $dd), date('Y', $dd));
+		       $new_due = date('Y-m-d H:i:00', $due_time_next_week);
+		       $new_end = date('Y-m-d H:i:00', $due_time_next_week + $duration);
+		     }
+		   } elseif ($rec['REPEAT_TYPE'] == 4) {//дни
+		       $due_time_next_day = $due_time + $repeat_in*24*60*60;
+				while ($due_time_next_day <= $tm){ //in future only!
+					$due_time_next_day = $due_time_next_day + $repeat_in*24*60*60;
+				}
+		       $new_due = date('Y-m-d H:i:00', $due_time_next_day);
+		       $new_end = date('Y-m-d H:i:00', $due_time_next_day + $duration);
+		
+		   } elseif ($rec['REPEAT_TYPE'] == 5) {//часы
+				
+		       $due_time_next_hour = $due_time + $repeat_in*60*60;
+				while ($due_time_next_hour <= $tm){ //in future only!
+					$due_time_next_hour = due_time_next_hour + $repeat_in*60*60;
+				}
+		       $new_due = date('Y-m-d H:i:00', $due_time_next_hour);
+		       $new_end = date('Y-m-d H:i:00', $due_time_next_hour + $duration);
+		
+		   } elseif ($rec['REPEAT_TYPE'] == 6) {//минуты
+
 				$due_time_next_minute = $due_time + $repeat_in*60;
+				while ($due_time_next_minute <= $tm){ //in future only!
+					$due_time_next_minute = $due_time_next_minute + $repeat_in*60;
+				}
+		       $new_due = date('Y-m-d H:i:00', $due_time_next_minute);
+		       $new_end = date('Y-m-d H:i:00', $due_time_next_minute + $duration);
 			}
-	       $new_due = date('Y-m-d H:i:00', $due_time_next_minute);
-	       $new_end = date('Y-m-d H:i:00', $due_time_next_minute + $duration);
-		}
-	} 
+		} 
 	if(SETTINGS_TODOER_LOGGING) debmes('repeated task "'.$rec['TITLE'].'" sets new due '.$new_due,'todoer');
 	$rec['LOG'] .= " Новый срок: ".date('d.m.y H:i:00',strtotime($new_due));
 	//upd remind for repeat events/tasks
@@ -693,6 +563,8 @@ $months = array(1=>"Янв","Фев","Мар","Апр","Май","Июн","Июл
 	$rec['DUE'] = $new_due;
 	$rec['END_TIME'] = $new_end;
 	$rec['IS_BEGIN'] = ($tm < strtotime($new_due))?0:$rec['IS_BEGIN'];
+	if(SETTINGS_TODOER_LOGGING) debmes('Fin: repeated task "'.$rec['TITLE'].'" new due:'. $new_due.'-'.$new_end.'  is_begin='.$rec['IS_BEGIN'],'todoer');
+
 }
 //save 
 SQLUpdate('clnd_events', $rec);
@@ -738,33 +610,36 @@ function task_begin($id, $code="") {
 }
 
  function process_remind($id) {
-  $rec = SQLSelectOne("SELECT * FROM clnd_events WHERE ID='".(int)$id."'");
-	$txt = "";
-  if($rec['ID']){
-	  $rec['IS_REMIND'] = 0;
-	  SQLUpdate('clnd_events', $rec);
+	$rec = SQLSelectOne("SELECT * FROM clnd_events WHERE ID='".(int)$id."'");
+	$txt = '';
+	if($rec['ID']){
 	  //?user
 	  if($rec['USER_ID']){
 		$users = SQLSelectOne("SELECT * FROM users  WHERE ID='".$rec['USER_ID']."'");
-		$user_name = $users['NAME'];
-		$txt .= $user_name."!";
+		if($users){
+			$user_name = $users['NAME'];
+			$txt .= $user_name."!";
+		}
 	  }
 	  if($rec['REMIND_TYPE']==0){
-		say($txt." Напоминаю о задаче '" .$rec['TITLE']."'.",2);
+		$task = $rec['TITLE'];
+		$cmd = "say('".$txt." Напоминаю о задаче - $task!',2);";
+		setTimeOut('reminder_task_'.$rec['ID'],$cmd,1);//вместо say - иначе почему-то валится цикл exec
 	  }else{
 		if ($rec['REMIND_CODE']!==""){
 			                        try {
 			                            $code = $rec['REMIND_CODE'];
 			                            $success = eval($code);
 			                            if ($success === false)
-			                                DebMes("Error in Calendar Reminder code: " . $code);
+			                                DebMes("Error in Todoer Reminder code: " . $code);
 			                        } catch (Exception $e) {
 			                            DebMes('Error: exception ' . get_class($e) . ', ' . $e->getMessage() . '.');
 			                        }
 			                    }
 	  }
-
-  }
+		$rec['IS_REMIND'] = 0;
+		SQLUpdate('clnd_events', $rec);
+	}
 }
 
 /**
@@ -780,10 +655,8 @@ function processSubscription($event, $details=''){
 	$total = count($tasks);
 	for ($i = 0; $i < $total; $i++) {
 		if($tasks[$i]['IS_BEGIN'] == "0" ){//process begin_code
-			//if($tasks[$i]['BEGIN_CODE'] !== ""){
 				$this -> task_begin($tasks[$i]['ID'],$tasks[$i]['BEGIN_CODE']);
 				if(SETTINGS_TODOER_LOGGING) debmes('start task finded "'.$tasks[$i]['TITLE'].'". process...',"todoer");
-			//}
 		}
 	}
 
@@ -855,92 +728,130 @@ return SQLInsert('clnd_events', $rec);
 * @access public
 */
  function calendar_full(&$out,$m1=1,$m2=12) {
-  //debmes('we are here - function calendar_full');
   require(DIR_MODULES.$this->name.'/clnd_full.inc.php');
+ }
+/**
+* calendar_events delete_done_tasks
+*
+* @access public
+*/
+ function delete_done_tasks() {
+  SQLExec("DELETE FROM clnd_events WHERE IS_DONE=1 AND IS_REPEATING=0 ");
+ }
+
+/**
+* calendar_events delete all old tasks
+*
+* @access public
+*/
+ function delete_past_events() {
+$hl_ID=-1;
+$workdays_ID=-1;
+$rec=SQLSelectOne('select ID from clnd_categories where holidays=1');
+if ($rec) 
+ $hl_ID=$rec['ID'];
+
+$rec=SQLSelectOne('select ID from clnd_categories where holidays=2');
+if ($rec) 
+ $workdays_ID=$rec['ID'];
+
+  SQLExec("DELETE FROM clnd_events WHERE not CALENDAR_CATEGORY_ID in (".$hl_ID.",".$workdays_ID.") AND IS_REPEATING=0  and IS_NODATE=0 and (TO_DAYS(NOW())-TO_DAYS(DUE))>1");
  }
 /**
 * GetHolidays
 *
 * @access public
+* holidays =1 holiday, 2 workday
 */
- function clnd_getholidays() {
-$year = date('Y');
-
+ function clnd_getholidays($year='') {
+	if($year){
+		$year = (int)$year;
+	}else{
+		$year = date('Y');
+	}
 $rec = SQLSelectOne('select ID from clnd_categories where holidays=1');
-if ($rec) {
-$hl_ID = $rec['ID'];
-//Удаляем все записи за текущий год из календаря
-//с категорией у которой стоит галочка Праздники
-SQLExec('delete from clnd_events where CALENDAR_CATEGORY_ID=' . $hl_ID . ' and Year(DUE)=' . $year);
+	if ($rec) {
 
-$rec = SQLSelectOne('select ID from clnd_categories where workdays=1');
-if($rec){
-	$workdays_ID = $rec['ID'];
-	//Удаляем все записи за текущий год из календаря
-	//с категорией у которой стоит галочка Праздники
-	SQLExec('delete from clnd_events where CALENDAR_CATEGORY_ID=' . $workdays_ID . ' and Year(DUE)=' . $year);
-}
-$calendar = simplexml_load_file('http://xmlcalendar.ru/data/ru/'.date('Y').'/calendar.xml');
-$hd=$calendar->holidays->holiday; 
-$calendar = $calendar->days->day;
-foreach( $hd as $hday ){
-    $id = (array)$hday->attributes()->id;
-    $id = $id[0]; 
-    $title = (array)$hday->attributes()->title;
-    $title = $title[0]; 
-    $holidays[$id]=$title;
+		$calendar = simplexml_load_file('http://xmlcalendar.ru/data/ru/'.$year.'/calendar.xml');
+		if($calendar){
+			$hl_ID = $rec['ID'];
+			//Удаляем все записи за текущий год из календаря
+			//с категорией у которой стоит галочка Праздники
+			SQLExec('delete from clnd_events where CALENDAR_CATEGORY_ID=' . $hl_ID . ' and Year(DUE)=' . $year);
+			
+			$rec = SQLSelectOne('select ID from clnd_categories where holidays=2');
+			if($rec){
+				$workdays_ID = $rec['ID'];
+				//Удаляем все записи за текущий год из календаря
+				//с категорией у которой стоит галочка Праздники
+				SQLExec('delete from clnd_events where CALENDAR_CATEGORY_ID=' . $workdays_ID . ' and Year(DUE)=' . $year);
+			}
+
+			$hd = $calendar->holidays->holiday; 
+			$calendar = $calendar->days->day;
+			foreach( $hd as $hday ){
+			    $id = (array)$hday->attributes()->id;
+			    $id = $id[0]; 
+			    $title = (array)$hday->attributes()->title;
+			    $title = $title[0]; 
+			    $holidays[$id]=$title;
+			}
+		
+			//все праздники за текущий год
+			foreach( $calendar as $day ){
+			    $d = (array)$day->attributes()->d;
+			    $d = $d[0];
+			    //не считая короткие дни
+			    if( $day->attributes()->t == 1 ) {
+			     $h=$day->attributes()->h;
+			     if (isset($holidays[(int)$h]))
+			      $hd_name=$holidays[(int)$h];
+			     else
+			      $hd_name='Выходной день';
+			//     $arHolidays[] = array('DAY'=>substr($d, 3, 2),'MONTH'=>substr($d, 0, 2),'HD_NAME'=>$hd_name);
+			     $Record = Array();
+				 //$Record['IS_TASK'] = 0;
+			     $Record['DUE'] = $year . '-' . substr($d, 0, 2) . '-' . substr($d, 3, 2) .' 00:00:00';
+			     $Record['END_TIME'] = $year . '-' . substr($d, 0, 2) . '-' . substr($d, 3, 2) .' 23:59:00';
+			     $Record['ALL_DAY'] = 1;
+			     $Record['NOTES'] = "добавлено из производственного календаря"; 
+			     $Record['CALENDAR_CATEGORY_ID'] = $hl_ID;
+			     $Record['TITLE'] = $hd_name;
+			     $Record['ID']=SQLInsert('clnd_events', $Record);
+			     
+			    }
+			    elseif ( $day->attributes()->t ==3 ) {
+			//     $arWorkdays[]=array('DAY'=>substr($d, 3, 2),'MONTH'=>substr($d, 0, 2));
+			     $Record = Array();
+				 //$Record['IS_TASK'] = 0;
+			     $Record['DUE'] = $year . substr($d, 0, 2) . substr($d, 3, 2) .' 00:00:00' ;
+			     $Record['END_TIME'] = $year . '-' . substr($d, 0, 2) . '-' . substr($d, 3, 2) .' 23:59:00';
+			     $Record['ALL_DAY'] = 1; 
+			     $Record['NOTES'] = "добавлено из производственного календаря"; 
+			     $Record['CALENDAR_CATEGORY_ID'] = $workdays_ID;
+			     $Record['TITLE'] = 'Перенесенный рабочий день';
+			     $Record['ID']=SQLInsert('clnd_events', $Record);
+				}
+			}
+		}
+	}
 }
 
-//все праздники за текущий год
-foreach( $calendar as $day ){
-    $d = (array)$day->attributes()->d;
-    $d = $d[0];
-    //не считая короткие дни
-    if( $day->attributes()->t == 1 ) {
-     $h=$day->attributes()->h;
-     if (isset($holidays[(int)$h]))
-      $hd_name=$holidays[(int)$h];
-     else
-      $hd_name='Выходной день';
-//     $arHolidays[] = array('DAY'=>substr($d, 3, 2),'MONTH'=>substr($d, 0, 2),'HD_NAME'=>$hd_name);
-     $Record = Array();
-	 //$Record['IS_TASK'] = 0;
-     $Record['DUE'] = $year . '-' . substr($d, 0, 2) . '-' . substr($d, 3, 2) .' 00:00:00';
-     $Record['END_TIME'] = $year . '-' . substr($d, 0, 2) . '-' . substr($d, 3, 2) .' 23:59:00';
-     $Record['ALL_DAY'] = 1; 
-     $Record['CALENDAR_CATEGORY_ID'] = $hl_ID;
-     $Record['TITLE'] = $hd_name;
-     $Record['ID']=SQLInsert('clnd_events', $Record);
-     
-    }
-    elseif ( $day->attributes()->t ==3 ) {
-//     $arWorkdays[]=array('DAY'=>substr($d, 3, 2),'MONTH'=>substr($d, 0, 2));
-     $Record = Array();
-	 //$Record['IS_TASK'] = 0;
-     $Record['DUE'] = $year . substr($d, 0, 2) . substr($d, 3, 2) .' 00:00:00' ;
-     $Record['END_TIME'] = $year . '-' . substr($d, 0, 2) . '-' . substr($d, 3, 2) .' 23:59:00';
-     $Record['ALL_DAY'] = 1; 
-     $Record['CALENDAR_CATEGORY_ID'] = $workdays_ID;
-     $Record['TITLE'] = 'Перенесенный рабочий день';
-     $Record['ID']=SQLInsert('clnd_events', $Record);
 
-    }
-}
-}
-}
 /**
-* parse_cr from Eraser
+* parse_cron_str from Eraser
 *
 * @access public
 */
-function parse_cr($_cron_string,$_after_timestamp=null){
+
+function parse_cron_str($_cron_string,$_after_timestamp=null){
         $cron   = preg_split("/[\s]+/i",trim($_cron_string));
         $start  = empty($_after_timestamp)?time():$_after_timestamp;
-        $date   = array(    'minutes'   =>_parseCronNumbers1($cron[0],0,59),
-                            'hours'     =>_parseCronNumbers1($cron[1],0,23),
-                            'dom'       =>_parseCronNumbers1($cron[2],1,31),
-                            'month'     =>_parseCronNumbers1($cron[3],1,12),
-                            'dow'       =>_parseCronNumbers1($cron[4],0,6),
+        $date   = array(    'minutes'   =>$this->_parseCronNumbers1($cron[0],0,59),
+                            'hours'     =>$this->_parseCronNumbers1($cron[1],0,23),
+                            'dom'       =>$this->_parseCronNumbers1($cron[2],1,31),
+                            'month'     =>$this->_parseCronNumbers1($cron[3],1,12),
+                            'dow'       =>$this->_parseCronNumbers1($cron[4],0,6),
                         );
 						//echo '<pre>';
 						//print_r($date);
@@ -957,11 +868,13 @@ function parse_cr($_cron_string,$_after_timestamp=null){
         }
         return null;
     }
+
 /**
 * _parseCronNumbers1 from Eraser
 *
 * @access public
 */
+
 function _parseCronNumbers1($s,$min,$max){
         $result = array();
 
@@ -980,6 +893,7 @@ function _parseCronNumbers1($s,$min,$max){
         ksort($result);
         return $result;
     } 
+
 /**
 * Install
 *
@@ -1055,7 +969,7 @@ clnd_categories - Categories
  clnd_events: REPEAT_CRON varchar(255) NOT NULL DEFAULT ''
  clnd_events: YE_MONTHS varchar(255) NOT NULL DEFAULT ''
  clnd_events: IS_BEGIN int(3) NOT NULL DEFAULT '0'
-
+ clnd_events: LOCATION_ID int(10) NOT NULL DEFAULT '0'
 
  clnd_categories: ID int(10) unsigned NOT NULL auto_increment
  clnd_categories: TITLE varchar(255) NOT NULL DEFAULT ''

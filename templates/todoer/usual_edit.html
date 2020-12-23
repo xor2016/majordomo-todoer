@@ -1,3 +1,5 @@
+<a style="margin: 15px 0px 5px 15px;" class="btn btn-default" href="?">Назад</a>
+
 <div class="container-fluid">
 <form action="?" method="post">
 <div class="row" style="margin-left: 20px;margin-right: 20px;">
@@ -527,8 +529,8 @@
 			<div style="font-style: italic;">Подчинённые задачи:</div>
 				<div class="col-xs-6 col-sm-6 col-md-6 col-12">
 					[#begin OTHERS#]
-					<!-- тут разница с usual! ?view_mode=edit-->
-					<a href="?view_mode=edit_clnd_events&id=[#ID#]">[#if IS_DONE="1"#]<strike>[#endif#]&nbsp;&nbsp;[#TITLE#][#if IS_DONE="1"#]</strike>[#endif#]</a><br>
+					<!-- тут разница с clnd_events_edit! ?view_mode=edit_clnd_events-->
+					<a href="?view_mode=edit&id=[#ID#]">[#if IS_DONE="1"#]<strike>[#endif#]&nbsp;&nbsp;[#TITLE#][#if IS_DONE="1"#]</strike>[#endif#]</a><br>
 					[#end OTHERS#]
 					
 				</div>

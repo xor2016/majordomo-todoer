@@ -8,6 +8,14 @@
 		 		&nbsp;
 			</div>
 			<div class="form-group">
+				<a href="?view_mode=delete_done_tasks" class="btn btn-warning"><i class="glyphicon glyphicon-minus"></i> Удалить все выполненые задачи</a>
+		 		&nbsp;
+			</div>
+			<div class="form-group">
+				<a href="?view_mode=delete_past_events" class="btn btn-danger"><i class="glyphicon glyphicon-minus"></i> Удалить все прошедшие дела</a>
+		 		&nbsp;
+			</div>
+			<div class="form-group">
 				<b>Фильтры:</b>
 			</div>
 			<div class="form-group">
@@ -17,6 +25,15 @@
 						[#begin CATEGORIES#]
 						<option value="[#ID#]"[#if ID="<#CALENDAR_CATEGORY_ID#>"#] selected[#endif#]>[#TITLE#]
 						[#end CATEGORIES#]
+					</select>
+			</div>
+			<div class="form-group">
+					<select name="clnd_user" class="form-control" onchange="this.form.submit();">
+						<option value="">Пользователь</option>
+						<option value="0"[#if CLND_USER="0"#] selected[#endif#]>Не назначен</option>
+						[#begin USERS#]
+						<option value="[#ID#]"[#if ID="<#CLND_USER#>"#] selected[#endif#]>[#NAME#]
+						[#end USERS#]
 					</select>
 			</div>
 			<div class="form-group">
@@ -53,7 +70,7 @@
 		<!-- / paging -->
 				<!-- search results (list) -->
 				<form action="?" method="post" name="frmList_clnd_events" style="padding:0px" class="form">
-				<table class="table table-striped">
+				<table class="table table-striped table-hover">
 				<tr class="active">
 					<th>Срок</th>
 					<th>Задача </th>
@@ -65,7 +82,7 @@
 				<tbody>
 				[#begin RESULT#]
 				<tr [#if IS_DONE="1"#]class="success"[#endif IS_DONE#][#if IS_DONE="2"#]class="danger"[#endif IS_DONE#]>
-				<td width="130" align="left">[#DUE#]</td>
+				<td width="130" align="left">[#DUE#] - [#END_TIME#]</td>
 				 <td><b>[#TITLE#]</b></td>
 				 <td>[#if NOTES!=""#]<span style="color: grey; font-style: italic;"> [#NOTES#]</span>[#else#]&nbsp;[#endif#]</td>
 				<td width="15%">[#if CATEGORY!=""#][#CATEGORY#][#else#]&nbsp;[#endif#]</td>
