@@ -20,10 +20,6 @@ if (isset($_GET['id'])) {
  if (isset($_GET['holidays'])) 
   $rec['HOLIDAYS']=$_GET['holidays'];
 
- if (isset($_GET['workdays'])) 
-  $rec['WORKDAYS']=$_GET['workdays'];
-
-
  if (isset($_GET['calendar_color'])) 
   $rec['CALENDAR_COLOR']=$_GET['calendar_color'];
 

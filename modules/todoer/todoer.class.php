@@ -272,13 +272,11 @@ if(SETTINGS_TODOER_SHOWMAINONLY){
   $events_today = SQLSelect("SELECT  DATE_FORMAT( clnd_events.due, '%d.%m.%y %H:%i' ) due_time, DATE_FORMAT( clnd_events.end_time,'%d.%m.%y %H:%i' ) end_time_frmt,clnd_events.*, clnd_categories.ICON, (SELECT COUNT( d.ID ) FROM clnd_events d WHERE d.parent_id = clnd_events.id ) IS_MAIN,clnd_categories.title CAT_NAME FROM clnd_events left join clnd_categories on clnd_events.calendar_category_id=clnd_categories.id  WHERE TO_DAYS(DUE)<=TO_DAYS(NOW()) and END_TIME>=NOW() and IS_NODATE=0 AND IS_DONE=0 AND ifnull(AT_CALENDAR,1)!=0 $hidetask ORDER BY DUE");
 
   if ($events_today) {
-   $out['EVENTS_TODAY']=$events_today;
+   $out['EVENTS_TODAY'] = $events_today;
    $out['EVENTS_TODAY_REC_COUNT'] = count($events_today);
+   $out['TODAY_DATE'] = date('d.m.y');
   }
 
-  if ($events_today) {
-   $out['EVENTS_TODAY']=$events_today;
-  }
 //no date with progress
 $events_nodate = SQLSelect("SELECT DATE_FORMAT( clnd_events.due, '%H:%i' ) due_time, clnd_events . * , clnd_categories.ICON, (SELECT COUNT( d.ID ) FROM clnd_events d WHERE d.parent_id = clnd_events.id ) IS_MAIN, (  SELECT round(SUM( c.IS_DONE ) * 100 / COUNT( c.ID )) FROM clnd_events c WHERE c.PARENT_ID = clnd_events.ID ) PR,clnd_categories.title CAT_NAME FROM clnd_events clnd_events LEFT JOIN clnd_categories ON clnd_events.calendar_category_id = clnd_categories.id WHERE IS_NODATE=1 AND IS_DONE=0 AND ifnull(AT_CALENDAR,1)!=0 $hidetask ORDER BY TITLE");
 
@@ -292,6 +290,8 @@ $events_nodate = SQLSelect("SELECT DATE_FORMAT( clnd_events.due, '%H:%i' ) due_t
   if ($events_tomorrow) {
    $out['EVENTS_TOMORROW']=$events_tomorrow;
    $out['EVENTS_TOMORROW_REC_COUNT'] = count($events_tomorrow);
+   $out['TOMORROW_DATE'] = date('d.m.y',strtotime("+1 day"));
+
   }
 ////////////////////////////////////////////////////////////////////////
 if (SETTINGS_TODOER_SOONLIMIT) {
@@ -979,7 +979,6 @@ clnd_categories - Categories
  clnd_categories: AT_CALENDAR tinyint(1) NOT NULL DEFAULT 0
  clnd_categories: CALENDAR_COLOR int(11) NOT NULL DEFAULT 0
  clnd_categories: HOLIDAYS tinyint(1) NOT NULL DEFAULT 0
- clnd_categories: WORKDAYS tinyint(1) NOT NULL DEFAULT 0
  
 EOD;
   parent::dbInstall($data);

@@ -22,6 +22,8 @@
   //updating 'PRIORITY' (int)
    global $priority;
    $rec['PRIORITY']=(int)$priority;
+	global $holidays;
+   $rec['HOLIDAYS']=(int)$holidays;
   //UPDATING RECORD
    if ($ok) {
     if ($rec['ID']) {

@@ -91,7 +91,7 @@
 [#endif EVENTS_NODATE#]
       </div>
       <div class="tab-pane fade in active" id="tab_events_today">
-		<h3><i style="color:CadetBlue;" class="glyphicon glyphicon-flag"></i>&nbsp;Сегодняшние дела</h3>
+		<h3><i style="color:CadetBlue;" class="glyphicon glyphicon-flag"></i>&nbsp;Дела на сегодня: [#TODAY_DATE#]</h3>
 [#if EVENTS_TODAY#]
 <table class="table">
             <thead>
@@ -133,7 +133,7 @@
       </div>
 
      <div class="tab-pane fade" id="tab_events_tomorrow">
-		<h3><i style="color:CadetBlue;" class="glyphicon glyphicon-tag"></i>&nbsp;Дела на завтра</h3>
+		<h3><i style="color:CadetBlue;" class="glyphicon glyphicon-tag"></i>&nbsp;Дела на завтра: [#TOMORROW_DATE#]</h3>
 [#if EVENTS_TOMORROW#]
 <table class="table">
             <thead>
