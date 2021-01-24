@@ -1,8 +1,36 @@
-
 [#if VIEW_MODE=""#]
-[#inc usual_list.html#]
+<ul class="nav nav-tabs">
+ <li [#if DATE_SEARCH="" && DATA_SOURCE!="clnd_full"#]class="active"[#endif#]><a href="?data_source=clnd_events&clnd_date_search=0&tab=all_recs"><span class="glyphicon glyphicon-list-alt"></span>&nbsp;Все дела</a></li>
+ <li [#if DATE_SEARCH="1"#]class="active"[#endif#]><a href="?data_source=clnd_events&clnd_date_search=1&tab=today"><i style="color:CadetBlue;" class="glyphicon glyphicon-flag"></i>&nbsp;Сегодня <span class="badge">{#COUNT_TODAY#}</span></a></li>
+[#if COUNT_OVERDUE>0#]
+ <li [#if DATE_SEARCH="5"#]class="active"[#endif#]><a href="?data_source=clnd_events&clnd_date_search=5&tab=overdue"><i style=" color:DarkOrange;" class="glyphicon glyphicon-exclamation-sign"></i>&nbsp;Просроченные <span class="badge">{#COUNT_OVERDUE#}</span></a></li>
+[#endif#]
+[#if COUNT_DONE>0#]
+ <li [#if DATE_SEARCH="6"#]class="active"[#endif#]><a href="?data_source=clnd_events&clnd_date_search=6&tab=done"><i style=" color:DarkGreen;" class="glyphicon glyphicon-ok"></i>&nbsp;Завершенные <span class="badge">{#COUNT_DONE#}</span></a></li>
+[#endif#]
+ <li [#if DATE_SEARCH="2"#]class="active"[#endif#]><a href="?data_source=clnd_events&clnd_date_search=2&tab=nexts"><i style="color:CadetBlue;" class="glyphicon glyphicon-tags"></i>&nbsp;Скоро <span class="badge">{#COUNT_SOON#}</span></a></li>
+ <li [#if DATE_SEARCH="4"#]class="active"[#endif#]><a href="?data_source=clnd_events&clnd_date_search=4&tab=no_date"><i style="color:CadetBlue;" class="glyphicon glyphicon-bookmark"></i> Без даты <span class="badge">{#COUNT_IS_NODATE#}</span></a></li>
+ <li [#if DATA_SOURCE="clnd_full"#]class="active"[#endif#]><a href="?data_source=clnd_full"><span class="glyphicon glyphicon-calendar"></span>&nbsp;Календарь на год</a></li>
+  
+
+</ul>
+[#if DATA_SOURCE!="clnd_full"#]
+[#inc clnd_events_search_usual.html#]
+[#else#]
+ <style>
+    body {
+      padding: 30px;
+    }
+    .tab-content {
+      padding: 14px;
+    }
+  </style>
+[#inc clnd_full.html#]
+[#endif DATA_SOURCE#]
+
 [#endif VIEW_MODE#]
 
-[#if VIEW_MODE="edit"#]
-[#inc usual_edit.html#]
+[#if VIEW_MODE="edit_clnd_events"#]
+[#inc clnd_events_edit.html#]
 [#endif VIEW_MODE#]  
+

@@ -95,7 +95,7 @@ function run() {
   if ($this->action=='admin') {
    $this->admin($out);
   } else {
-   $this->usual($out);
+   $this->admin($out);
   }
   $this->checkSettings();
   if (IsSet($this->owner->action)) {
@@ -190,7 +190,6 @@ function admin(&$out) {
   }
   if ($this->view_mode=='edit_clnd_events') {
    $this->edit_clnd_events($out, $this->id);
-   //$this->usual_edit($out, $this->id);
   }
   if ($this->view_mode=='delete_clnd_events') {
    $this->delete_clnd_events($this->id);
@@ -239,7 +238,7 @@ function admin(&$out) {
 */
 function usual(&$out) {
  if ($this->view_mode=='edit') {
-  $this->usual_edit($out,$id);
+  $this->edit_clnd_events($out,$this->$id);
  }
 
  if ($this->view_mode=='') {
@@ -268,7 +267,7 @@ function usual(&$out) {
 if(SETTINGS_TODOER_SHOWMAINONLY){
 	$hidetask = " and clnd_events.parent_id=0";
 }
-
+/*
   $events_today = SQLSelect("SELECT  DATE_FORMAT( clnd_events.due, '%d.%m.%y %H:%i' ) due_time, DATE_FORMAT( clnd_events.end_time,'%d.%m.%y %H:%i' ) end_time_frmt,clnd_events.*, clnd_categories.ICON, (SELECT COUNT( d.ID ) FROM clnd_events d WHERE d.parent_id = clnd_events.id ) IS_MAIN,clnd_categories.title CAT_NAME FROM clnd_events left join clnd_categories on clnd_events.calendar_category_id=clnd_categories.id  WHERE TO_DAYS(DUE)<=TO_DAYS(NOW()) and END_TIME>=NOW() and IS_NODATE=0 AND IS_DONE=0 AND ifnull(AT_CALENDAR,1)!=0 $hidetask ORDER BY DUE");
 
   if ($events_today) {
@@ -330,7 +329,7 @@ if (SETTINGS_TODOER_SOONLIMIT) {
   }
 
   $out['CATEGORIES'] = SQLSelect("SELECT * from clnd_categories ORDER BY TITLE");
-
+*/
  }//$this->view_mode==''
 }
 
@@ -655,8 +654,8 @@ function processSubscription($event, $details=''){
 	$total = count($tasks);
 	for ($i = 0; $i < $total; $i++) {
 		if($tasks[$i]['IS_BEGIN'] == "0" ){//process begin_code
-				$this -> task_begin($tasks[$i]['ID'],$tasks[$i]['BEGIN_CODE']);
 				if(SETTINGS_TODOER_LOGGING) debmes('start task finded "'.$tasks[$i]['TITLE'].'". process...',"todoer");
+				$this -> task_begin($tasks[$i]['ID'],$tasks[$i]['BEGIN_CODE']);
 		}
 	}
 
@@ -665,9 +664,10 @@ function processSubscription($event, $details=''){
 	$tasks = SQLSelect($sql);
 	$total = count($tasks);
 	for ($i = 0; $i < $total; $i++) {
-			if(SETTINGS_TODOER_LOGGING) debmes('repeated/ended task "'.$tasks[$i]['TITLE'].'" finded. process with autodone='.$tasks[$i]['AUTODONE'],"todoer");
 			$id = $tasks[$i]['ID'];
 			if($id){
+				if(SETTINGS_TODOER_LOGGING) debmes('repeated/ended task "'.$tasks[$i]['TITLE'].'" finded. process with autodone='.$tasks[$i]['AUTODONE'],"todoer");
+
 				$this -> task_done($id, $tasks[$i]['AUTODONE']);//запустим обновление с/без запуска скриптов
 			}
 	}
@@ -676,9 +676,9 @@ function processSubscription($event, $details=''){
 	$tasks = SQLSelect($sql);
 	$total = count($tasks);
 	for ($i = 0; $i < $total; $i++) {
-		if(SETTINGS_TODOER_LOGGING) debmes('reminder finded for task "'.$tasks[$i]['TITLE'].'". process ...',"todoer");
 			$id = $tasks[$i]['ID'];
 			if($id){
+				if(SETTINGS_TODOER_LOGGING) debmes('reminder finded for task "'.$tasks[$i]['TITLE'].'". process ...',"todoer");
 				$this -> process_remind($id);
 			}
 		}
@@ -687,9 +687,9 @@ function processSubscription($event, $details=''){
 		$tasks = SQLSelect($sql);
 		$total = count($tasks);
 		for ($i = 0; $i < $total; $i++) {
-			if(SETTINGS_TODOER_LOGGING) debmes('main task finded "'.$tasks[$i]['TITLE'].'". Done it by all childs finished!',"todoer");
 			$id = $tasks[$i]['ID'];
 			if($id){
+				if(SETTINGS_TODOER_LOGGING) debmes('main task finded "'.$tasks[$i]['TITLE'].'". Done it by all childs finished!',"todoer");
 				$this -> task_done($id, 1);
 			}
 		}
@@ -756,6 +756,9 @@ if ($rec)
  $workdays_ID=$rec['ID'];
 
   SQLExec("DELETE FROM clnd_events WHERE not CALENDAR_CATEGORY_ID in (".$hl_ID.",".$workdays_ID.") AND IS_REPEATING=0  and IS_NODATE=0 and (TO_DAYS(NOW())-TO_DAYS(DUE))>1");
+ //прошлый год - праздники почистим
+  SQLExec("DELETE FROM clnd_events WHERE CALENDAR_CATEGORY_ID in (".$hl_ID.",".$workdays_ID.") and IS_REPEATING=0 and IS_NODATE=0 and YEAR(NOW())>YEAR(DUE)");
+
  }
 /**
 * GetHolidays
@@ -801,7 +804,6 @@ $rec = SQLSelectOne('select ID from clnd_categories where holidays=1');
 			foreach( $calendar as $day ){
 			    $d = (array)$day->attributes()->d;
 			    $d = $d[0];
-			    //не считая короткие дни
 			    if( $day->attributes()->t == 1 ) {
 			     $h=$day->attributes()->h;
 			     if (isset($holidays[(int)$h]))
@@ -814,9 +816,15 @@ $rec = SQLSelectOne('select ID from clnd_categories where holidays=1');
 			     $Record['DUE'] = $year . '-' . substr($d, 0, 2) . '-' . substr($d, 3, 2) .' 00:00:00';
 			     $Record['END_TIME'] = $year . '-' . substr($d, 0, 2) . '-' . substr($d, 3, 2) .' 23:59:00';
 			     $Record['ALL_DAY'] = 1;
-			     $Record['NOTES'] = "добавлено из производственного календаря"; 
+				 if($day->attributes()->f){
+				 	$ph = $day->attributes()->f;
+					$Record['NOTES'] = "Перенесено с ".substr($ph,3,2).".".substr($ph,0,2).".".$year;
+					$Record['TITLE'] = $hd_name." (перенос c ". substr($ph,3,2).".".substr($ph,0,2).")";
+				 }else{
+			     	$Record['NOTES'] = "добавлено из производственного календаря";
+					$Record['TITLE'] = $hd_name; 
+				 }
 			     $Record['CALENDAR_CATEGORY_ID'] = $hl_ID;
-			     $Record['TITLE'] = $hd_name;
 			     $Record['ID']=SQLInsert('clnd_events', $Record);
 			     
 			    }
@@ -824,13 +832,31 @@ $rec = SQLSelectOne('select ID from clnd_categories where holidays=1');
 			//     $arWorkdays[]=array('DAY'=>substr($d, 3, 2),'MONTH'=>substr($d, 0, 2));
 			     $Record = Array();
 				 //$Record['IS_TASK'] = 0;
-			     $Record['DUE'] = $year . substr($d, 0, 2) . substr($d, 3, 2) .' 00:00:00' ;
+			     $Record['DUE'] = $year . '-' . substr($d, 0, 2) . '-' . substr($d, 3, 2) .' 00:00:00' ;
 			     $Record['END_TIME'] = $year . '-' . substr($d, 0, 2) . '-' . substr($d, 3, 2) .' 23:59:00';
 			     $Record['ALL_DAY'] = 1; 
 			     $Record['NOTES'] = "добавлено из производственного календаря"; 
 			     $Record['CALENDAR_CATEGORY_ID'] = $workdays_ID;
-			     $Record['TITLE'] = 'Перенесенный рабочий день';
+			     $Record['TITLE'] = 'Рабочий день';
 			     $Record['ID']=SQLInsert('clnd_events', $Record);
+				}
+				elseif ( $day->attributes()->t ==2 ) {
+			//     $arWorkdays[]=array('DAY'=>substr($d, 3, 2),'MONTH'=>substr($d, 0, 2));
+				 //только для субботы и воскресенья
+				 $s_day = substr($d, 3, 2);
+				 $s_month = substr($d, 0, 2);
+				 $dt =  mktime(0, 0, 0, (int)$s_month, (int)$s_day, (int)$year);
+				 if (date('w', $dt) == 0 || date('w', $dt) == 6) {
+				     $Record = Array();
+					 //$Record['IS_TASK'] = 0;
+				     $Record['DUE'] = $year . '-' . $s_month . '-' . $s_day .' 00:00:00' ;
+				     $Record['END_TIME'] = $year . '-' . $s_month . '-' . $s_day .' 23:59:00';
+				     $Record['ALL_DAY'] = 1; 
+				     $Record['NOTES'] = "добавлено из производственного календаря"; 
+				     $Record['CALENDAR_CATEGORY_ID'] = $workdays_ID;
+				     $Record['TITLE'] = 'Сокращенный рабочий день';
+				     $Record['ID']=SQLInsert('clnd_events', $Record);
+					}
 				}
 			}
 		}
