@@ -150,7 +150,7 @@ function run() {
     ),
    array(
     'NAME'=>'TODOER_SHOWMAINONLY', 
-    'TITLE'=>'Не показывать подчиненные задачи', 
+    'TITLE'=>'Не показывать подчиненные задачи*', 
     'TYPE'=>'yesno',
     'DEFAULT'=>'0'
     ),
@@ -197,11 +197,13 @@ function admin(&$out) {
 	$this->redirect("?data_source=clnd_events");
   }
  }
+/*
  if ($this->data_source=='clnd_categories') {
   if ($this->view_mode=='' || $this->view_mode=='search_clnd_categories') {
    $this->search_clnd_categories($out);
   }
 }
+*/
  if ($this->view_mode=='delete_past_events') {
    $this->delete_past_events();
    $this->redirect("?data_source=clnd_events");
@@ -715,7 +717,7 @@ if($task['REPEAT_UNTIL'])$rec['REPEAT_UNTIL'] = $task['REPEAT_UNTIL'];
 if($task['CATEGORY']){
 	$cat = SQLSELECTONE("select * from clnd_categories where title like '%".dbsafe($task['CATEGORY'])."%'");
 	if($cat){
-		$rec['CATEGORY_ID'] = $cat['ID'];
+		$rec['CALENDAR_CATEGORY_ID'] = $cat['ID'];
 	}
 }
 //if($task['CATEGORY_ID'])$rec['CATEGORY_ID'] = $task['CATEGORY_ID'];
