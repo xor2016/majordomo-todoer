@@ -788,7 +788,7 @@ $rec = SQLSelectOne('select ID from clnd_categories where holidays=1');
 			if($rec){
 				$workdays_ID = $rec['ID'];
 				//Удаляем все записи за текущий год из календаря
-				//с категорией у которой стоит галочка Праздники
+				//с категорией у которой стоит галочка Рабочие
 				SQLExec('delete from clnd_events where CALENDAR_CATEGORY_ID=' . $workdays_ID . ' and Year(DUE)=' . $year);
 			}
 
