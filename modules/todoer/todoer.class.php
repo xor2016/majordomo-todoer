@@ -703,7 +703,7 @@ function processSubscription($event, $details=''){
 function create_new_task($task){
 $rec = array();
 $task['TITLE']?$rec['TITLE'] = $task['TITLE']:$rec['TITLE'] = "New task";
-$task['DUE']?$rec['DUE'] = $task['DUE']:$rec['DUE'] = date('Y-m-d H:i:00');;
+$task['DUE']?$rec['DUE'] = $task['DUE']:$rec['DUE'] = date('Y-m-d H:i:00');
 $task['END_TIME']?$rec['END_TIME'] = $task['END_TIME']:$rec['END_TIME'] = date('Y-m-d H:i:00');
 //...
 if($task['NOTES'])$rec['NOTES'] = $task['NOTES'];
@@ -713,7 +713,8 @@ if($task['REPEAT_IN'])$rec['REPEAT_IN'] = $task['REPEAT_IN'];
 if($task['BEGIN_CODE'])$rec['BEGIN_CODE'] = $task['BEGIN_CODE'];
 if($task['DONE_CODE'])$rec['DONE_CODE'] = $task['DONE_CODE'];
 if($task['AUTODONE'])$rec['AUTODONE'] = $task['AUTODONE'];
-if($task['REPEAT_UNTIL'])$rec['REPEAT_UNTIL'] = $task['REPEAT_UNTIL'];
+$task['REPEAT_UNTIL']?$rec['REPEAT_UNTIL'] = $task['REPEAT_UNTIL']:$rec['REPEAT_UNTIL'] = date('Y-m-d H:i:00');
+$task['REMIND_TIME']?$rec['REMIND_TIME'] = $task['REMIND_TIME']:$rec['REMIND_TIME'] = date('Y-m-d H:i:00');
 if($task['CATEGORY']){
 	$cat = SQLSELECTONE("select * from clnd_categories where title like '%".dbsafe($task['CATEGORY'])."%'");
 	if($cat){
