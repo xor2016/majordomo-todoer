@@ -57,14 +57,14 @@ if($clnd_date_search != ""){
 		$out['DATE_SEARCH'] = 5;
 	}elseif($clnd_date_search == "6"){
 		//recently done
-		$qry.=" and (IS_DONE=1 AND TO_DAYS(NOW())-TO_DAYS(DONE_WHEN)<=1) OR (IS_REPEATING=1 AND NOW() between END_TIME and DUE)";
+		$qry.=" and ((IS_DONE=1 AND TO_DAYS(NOW())-TO_DAYS(DONE_WHEN)<=1) OR (IS_REPEATING=1 AND NOW() between END_TIME and DUE))";
 		$out['DATE_SEARCH'] = 6;
 	}
 }else{
 	$out['DATE_SEARCH'] = "";
 }
 
-if($clnd_cat_hide !=""){
+if($clnd_cat_hide == "1" ){
 	$qry.=" AND ifnull(AT_CALENDAR,1)!=0";
 	$out['CLND_CAT_HIDE'] = 1;
 }
@@ -79,21 +79,7 @@ if($clnd_cat_hide !=""){
   if (!$qry) $qry="1";
   // FIELDS ORDER
   global $sortby;
-/*
-  if (!$sortby) {
-   $sortby = $session->data['clnd_events_sort'];
-   //$sortby = "IS_NODATE DESC,DUE DESC";
-   } else {
-   if ($session->data['clnd_events_sort']==$sortby) {
-    if (Is_Integer(strpos($sortby, ' DESC'))) {
-     $sortby=str_replace(' DESC', '', $sortby);
-    } else {
-     $sortby=$sortby." DESC";
-    }
-   }
-   $session->data['clnd_events_sort']=$sortby;
-  }
-*/
+
 	$sortby = "IS_NODATE DESC,DUE ";//one love
 	$session->data['clnd_events_sort'] = $sortby;
   // SEARCH RESULTS
@@ -132,10 +118,10 @@ if($clnd_cat_hide !=""){
 	  $out['COUNT_TODAY'] = $rs_count['N'];
 	  $rs_count = SQLSelectOne("SELECT count(*) N FROM clnd_events left join clnd_categories ON clnd_events.calendar_category_id=clnd_categories.id WHERE ifnull(AT_CALENDAR,1)!=0 and  IS_NODATE=1");
 	  $out['COUNT_IS_NODATE'] = $rs_count['N'];
-	  $rs_count = SQLSelectOne("SELECT count(*) N FROM clnd_events left join clnd_categories on clnd_events.calendar_category_id=clnd_categories.id  WHERE IS_DONE=2 AND ((ifnull(AT_CALENDAR,1)!=0 AND holidays=0) or clnd_categories.title is null)");
+	  $rs_count = SQLSelectOne("SELECT count(*) N FROM clnd_events left join clnd_categories on clnd_events.calendar_category_id=clnd_categories.id  WHERE  ifnull(AT_CALENDAR,1)!=0 and IS_DONE=2 AND ((ifnull(AT_CALENDAR,1)!=0 AND holidays=0) or clnd_categories.title is null)");
 	  $out['COUNT_OVERDUE'] = $rs_count['N'];
-	  $rs_count = SQLSelectOne("SELECT count(*) N FROM clnd_events left join clnd_categories on clnd_events.calendar_category_id=clnd_categories.id  WHERE IS_DONE=0 and TO_DAYS(DUE)>=TO_DAYS(NOW())+1 and TO_DAYS(END_TIME)>=TO_DAYS(NOW())+1 and IS_NODATE=0 AND TO_DAYS(DUE)<=TO_DAYS(NOW())+".SETTINGS_TODOER_SOONLIMIT);
+	  $rs_count = SQLSelectOne("SELECT count(*) N FROM clnd_events left join clnd_categories on clnd_events.calendar_category_id=clnd_categories.id  WHERE  ifnull(AT_CALENDAR,1)!=0 and IS_DONE=0 and TO_DAYS(DUE)>=TO_DAYS(NOW())+1 and TO_DAYS(END_TIME)>=TO_DAYS(NOW())+1 and IS_NODATE=0 AND TO_DAYS(DUE)<=TO_DAYS(NOW())+".SETTINGS_TODOER_SOONLIMIT);
 	  $out['COUNT_SOON'] = $rs_count['N'];
-	  $rs_count = SQLSelectOne("SELECT count(*) N FROM clnd_events left join clnd_categories on clnd_events.calendar_category_id=clnd_categories.id  WHERE (IS_DONE=1 AND TO_DAYS(NOW())-TO_DAYS(DONE_WHEN)<=1) OR (IS_REPEATING=1 AND NOW() between END_TIME and DUE)");
+	  $rs_count = SQLSelectOne("SELECT count(*) N FROM clnd_events left join clnd_categories on clnd_events.calendar_category_id=clnd_categories.id  WHERE  ifnull(AT_CALENDAR,1)!=0 and (IS_DONE=1 AND TO_DAYS(NOW())-TO_DAYS(DONE_WHEN)<=1) OR (IS_REPEATING=1 AND NOW() between END_TIME and DUE)");
 	  $out['COUNT_DONE'] = $rs_count['N'];
 }

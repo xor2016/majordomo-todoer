@@ -699,10 +699,24 @@ function processSubscription($event, $details=''){
 
 }
 
-
-function create_new_task($task){
+/**
+* create_new_task
+* no_double = 1  do not create task if exists the same
+* @access public
+*/
+function create_new_task($task, $no_double=0){
 $rec = array();
-$task['TITLE']?$rec['TITLE'] = $task['TITLE']:$rec['TITLE'] = "New task";
+if($task['TITLE']){
+	$rec['TITLE'] = $task['TITLE'];
+}else{
+	return "no title - no task!";
+}
+if($no_double){
+	$tst = SQLSELECTONE("select ID from clnd_events where `TITLE`='".$task['TITLE']."'");
+	if($tst){
+		return "task with this title exists!";
+	}
+}
 $task['DUE']?$rec['DUE'] = $task['DUE']:$rec['DUE'] = date('Y-m-d H:i:00');
 $task['END_TIME']?$rec['END_TIME'] = $task['END_TIME']:$rec['END_TIME'] = date('Y-m-d H:i:00');
 //...
@@ -723,6 +737,7 @@ if($task['CATEGORY']){
 }
 //if($task['CATEGORY_ID'])$rec['CATEGORY_ID'] = $task['CATEGORY_ID'];
 $rec['ADDED'] = date('Y-m-d H:i:s');
+
 return SQLInsert('clnd_events', $rec);
 }
 /**
@@ -828,6 +843,8 @@ $rec = SQLSelectOne('select ID from clnd_categories where holidays=1');
 					$Record['TITLE'] = $hd_name; 
 				 }
 			     $Record['CALENDAR_CATEGORY_ID'] = $hl_ID;
+				 if(time()> strtotime($Record['END_TIME']))$Record['IS_DONE'] = 1;
+				 if(time()> strtotime($Record['DUE']))$Record['IS_BEGIN'] = 1;
 			     $Record['ID']=SQLInsert('clnd_events', $Record);
 			     
 			    }
@@ -841,6 +858,9 @@ $rec = SQLSelectOne('select ID from clnd_categories where holidays=1');
 			     $Record['NOTES'] = "добавлено из производственного календаря"; 
 			     $Record['CALENDAR_CATEGORY_ID'] = $workdays_ID;
 			     $Record['TITLE'] = 'Рабочий день';
+				 if(time()> strtotime($Record['END_TIME']))$Record['IS_DONE'] = 1;
+				 if(time()> strtotime($Record['DUE']))$Record['IS_BEGIN'] = 1;
+
 			     $Record['ID']=SQLInsert('clnd_events', $Record);
 				}
 				elseif ( $day->attributes()->t ==2 ) {
@@ -858,6 +878,9 @@ $rec = SQLSelectOne('select ID from clnd_categories where holidays=1');
 				     $Record['NOTES'] = "добавлено из производственного календаря"; 
 				     $Record['CALENDAR_CATEGORY_ID'] = $workdays_ID;
 				     $Record['TITLE'] = 'Сокращенный рабочий день';
+     				 if(time()> strtotime($Record['END_TIME']))$Record['IS_DONE'] = 1;
+					 if(time()> strtotime($Record['DUE']))$Record['IS_BEGIN'] = 1;
+
 				     $Record['ID']=SQLInsert('clnd_events', $Record);
 					}
 				}

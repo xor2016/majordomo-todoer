@@ -1,4 +1,5 @@
-  <style>
+<meta http-equiv="refresh" content="60">  
+<style>
     body {
       padding: 30px;
     }
@@ -85,11 +86,12 @@
 				</tr>
 				<tbody>
 				[#begin RESULT#]
-				<tr [#if IS_DONE="1"#]class="success"[#endif IS_DONE#][#if IS_DONE="2"#]class="danger"[#endif IS_DONE#]>
+				<tr [#if IS_DONE="1"#]class="success"[#endif IS_DONE#][#if IS_DONE="2"#]class="danger"[#endif IS_DONE#][#if IS_BEGIN="1" and IS_DONE="0"#]class="warning"[#endif#]>
 				<td>
 				<span>[#if ICON#]<img style="width: 15px;" src="<#ROOTHTML#>cms/todoer/[#ICON#]">&nbsp;[#CATEGORY#][#else#]<i class="glyphicon glyphicon-question-sign" style="font-size:15px; color:lightgray;" aria-hidden="true" title="Без категории"></i>&nbsp;Без категории[#endif ICON#]</span>
 				</td>
 				<td>
+				[#if IS_BEGIN="1"#]<i style="font-size:20px; color:Darkolive;" class="glyphicon glyphicon-play" title="Началась"></i>[#else#]<i style="font-size:20px; color:lightgray;" class="glyphicon glyphicon-play" title="Не началась"></i>[#endif#]
 				[#if IS_DONE="1"#]<i style="font-size:20px; color:Green;" class="glyphicon glyphicon-ok" title="Готово"></i>[#else#]<i style="font-size:20px; color:lightgray;" class="glyphicon glyphicon-ok" title="Не готово"></i>[#endif IS_REMIND#][#endif IS_DONE#]
 				[#if IS_REMIND="1"#]<i style="font-size:20px; color:Darkorange;" class="glyphicon glyphicon-bell" title="Напоминание"></i>[#else#]<i style="font-size:20px; color:lightgray;" class="glyphicon glyphicon-bell" title="Не напоминать"></i>[#endif IS_REMIND#]
 				[#if AUTODONE="1"#]<i style="font-size:20px; color:orange;" class="glyphicon glyphicon-flash" title="Автозавершение"></i>[#else#]<i style="font-size:20px; color:lightgray;" class="glyphicon glyphicon-flash" title="Без Автозавершения"></i>[#endif AUTODONE#]
