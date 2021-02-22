@@ -256,8 +256,8 @@ function usual(&$out) {
    global $id;
 
    $rec=SQLSelectOne("SELECT * FROM clnd_events WHERE ID='".(int)$id."'");
-   $rec['IS_DONE']=0;
-   $rec['IS_BEGIN'] = ( time()< strtotime($rec['DUE']))?0:$rec['IS_BEGIN'];
+   $rec['IS_DONE'] = 0;
+   $rec['IS_BEGIN'] = ( time()< strtotime($rec['DUE']))?0:1;
 
    SQLUpdate('clnd_events', $rec);
 

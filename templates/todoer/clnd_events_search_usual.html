@@ -76,17 +76,17 @@
 		<!-- / paging -->
 				<!-- search results (list) -->
 				<form action="?" method="post" name="frmList_clnd_events" style="padding:0px" class="form">
-				<table class="table table-striped table-hover">
+				<table class="table table-hover table-striped">
 				<tr class="active">
                 <th  style="width: 150px;">Категория</th>
-                <th  style="width: 110px;">Атрибуты</th>
+                <th  style="width: 120px;">Атрибуты</th>
                 <th  style="width: 150px;">Срок</th>
                 <th  style="width: 300px;">Задача</th>
 				<th>Подробности</th>
 				</tr>
 				<tbody>
 				[#begin RESULT#]
-				<tr [#if IS_DONE="1"#]class="success"[#endif IS_DONE#][#if IS_DONE="2"#]class="danger"[#endif IS_DONE#][#if IS_BEGIN="1" and IS_DONE="0"#]class="warning"[#endif#]>
+				<tr [#if IS_DONE="1"#]class="success"[#else#][#if IS_DONE="2"#]class="danger"[#else#][#if IS_BEGIN="1"#]class="warning"[#endif#][#endif#][#endif#]>
 				<td>
 				<span>[#if ICON#]<img style="width: 15px;" src="<#ROOTHTML#>cms/todoer/[#ICON#]">&nbsp;[#CATEGORY#][#else#]<i class="glyphicon glyphicon-question-sign" style="font-size:15px; color:lightgray;" aria-hidden="true" title="Без категории"></i>&nbsp;Без категории[#endif ICON#]</span>
 				</td>

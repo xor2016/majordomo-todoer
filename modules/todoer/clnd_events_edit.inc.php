@@ -71,14 +71,7 @@
    global $repeat_type;
    $rec['REPEAT_TYPE']=(int)$repeat_type;
    
-   global $is_done;//признак закрытия
-   if ($is_done == "1" && $rec['IS_DONE'] != "1") {
-    $marked_done = 1; 
-	$rec['IS_BEGIN'] = 1; 
-   }
-   if ($is_done == "0"  && $rec['IS_DONE'] == "1") {//переоткроем закрытую задачу
-    $rec['IS_BEGIN'] = ( $tm < strtotime($rec['DUE']))?0:$rec['IS_BEGIN'];
-   }
+
 
 
    $rec['IS_DONE']=(int)$is_done;
@@ -95,6 +88,21 @@
    if($all_day){
      $rec['DUE'] = date('Y-m-d',strtotime($rec['DUE'])).' 00:00:00';
      $rec['END_TIME'] = date('Y-m-d',strtotime($rec['END_TIME'])).' 23:59:00';
+   }
+	
+   //global $is_begin;
+   //if($tm < strtotime($rec['DUE'])) {$rec['IS_BEGIN'] = 0;} else {$rec['IS_BEGIN'] = 1;}
+   $rec['IS_BEGIN'] = ( $tm < strtotime($rec['DUE']))?0:1;
+
+   global $is_done;//признак закрытия
+   if ($is_done == "1" && $rec['IS_DONE'] != "1") {
+    $marked_done = 1; 
+	$rec['IS_BEGIN'] = 1; 
+   }
+   
+   if ($is_done == "0"  && $rec['IS_DONE'] > 0) {//переоткроем закрытую задачу
+    //if($tm < strtotime($rec['DUE'])) $rec['IS_BEGIN'] = 0;
+	$rec['IS_DONE'] = 0;
    }
 
    global $user_id;
