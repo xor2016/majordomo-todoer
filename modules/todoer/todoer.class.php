@@ -526,7 +526,7 @@ if (SETTINGS_TODOER_SOONLIMIT) {
 	if(SETTINGS_TODOER_LOGGING) debmes('repeated task "'.$rec['TITLE'].'" sets new due '.$new_due,'todoer');
 	$rec['LOG'] .= " Новый срок: ".date('d.m.y H:i:00',strtotime($new_due));
 	//upd remind for repeat events/tasks
-	if($rec['IS_REMIND'] && $rec['REMIND_TIMER']<10){
+	if($rec['IS_REMIND']!=0 && $rec['REMIND_TIMER']<10){
 		$delta = array(0 => 5*60,
                   1 => 15*60,
                   2 => 30*60,
@@ -539,12 +539,13 @@ if (SETTINGS_TODOER_SOONLIMIT) {
                   9 => 48*60*60,
                   );
      $remd = strtotime($new_due) - $delta[$remind_timer];
-     if($remd < $tm) $remd = $remd + 60; //must be in future
+     if($remd < $tm) $remd = $tm + 60; //must be in future
 	 if($rec['REMIND_TIMER'] > 7 || $rec['ALL_DAY']){//напоминания для Напомнить за день - в стандартное время
 		$standart_remind_time = (SETTINGS_TODOER_STD_REMIND)?SETTINGS_TODOER_STD_REMIND:"12:00";
 		$remd = strtotime(date('Y-m-d H:i:00', strtotime(date('Y-m-d')." ".$standart_remind_time.":00"),$remd));
 	 }
      $rec['REMIND_TIME'] = date('Y-m-d H:i'.':00', $remd);
+	 $rec['IS_REMIND'] = 1;
   }
 	 
 	//check repeat_until
@@ -638,7 +639,7 @@ function task_begin($id, $code="") {
 			                        }
 			                    }
 	  }
-		$rec['IS_REMIND'] = 0;
+		($rec['IS_REPEATING'] && $rec['REMIND_TIMER']<10)?$rec['IS_REMIND'] = -1:$rec['IS_REMIND'] = 0;
 		SQLUpdate('clnd_events', $rec);
 	}
 }
