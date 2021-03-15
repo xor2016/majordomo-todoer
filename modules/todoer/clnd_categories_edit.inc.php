@@ -40,7 +40,7 @@
      $filename=strtolower(basename($icon_name));
      $ext=strtolower(end(explode(".",basename($icon_name))));
      if (
-         (filesize($icon)<=(0*1024) || 0==0) && (Is_Integer(strpos('gif jpg png', $ext)))
+         (filesize($icon)<=(0*1024) || 0==0) && (Is_Integer(strpos('gif jpg png svg', $ext)))
         ) {
            $filename=$rec["ID"]."_icon_".time().".".$ext;
            if ($rec["ICON"]!='') {

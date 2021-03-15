@@ -24,7 +24,7 @@
 						<option value="">Категория</option>
 						<option value="0"[#if CALENDAR_CATEGORY_ID="0"#] selected[#endif#]>Без категории</option>
 						[#begin CATEGORIES#]
-						<option value="[#ID#]"[#if ID="<#CALENDAR_CATEGORY_ID#>"#] selected[#endif#]>[#TITLE#]
+						<option value="[#ID#]"[#if ID="<#CALENDAR_CATEGORY_ID#>"#] selected[#endif#]>[#TITLE#]</option>
 						[#end CATEGORIES#]
 					</select>
 			</div>
@@ -88,7 +88,7 @@
 				[#begin RESULT#]
 				<tr [#if IS_DONE="1"#]class="success"[#else#][#if IS_DONE="2"#]class="danger"[#else#][#if IS_BEGIN="1"#]class="warning"[#endif#][#endif#][#endif#]>
 				<td>
-				<span>[#if ICON#]<img style="width: 15px;" src="<#ROOTHTML#>cms/todoer/[#ICON#]">&nbsp;[#CATEGORY#][#else#]<i class="glyphicon glyphicon-question-sign" style="font-size:15px; color:lightgray;" aria-hidden="true" title="Без категории"></i>&nbsp;Без категории[#endif ICON#]</span>
+				<span>[#if ICON#]<img style="width: 30px;" src="<#ROOTHTML#>cms/todoer/[#ICON#]">&nbsp;[#CATEGORY#][#else#]<i class="glyphicon glyphicon-question-sign" style="font-size:30px; color:lightgray;" aria-hidden="true" title="Без категории"></i>&nbsp;Без категории[#endif ICON#]</span>
 				</td>
 				<td>
 				[#if IS_BEGIN="1"#]<i style="font-size:20px; color:Darkolive;" class="glyphicon glyphicon-play" title="Началась"></i>[#else#]<i style="font-size:20px; color:lightgray;" class="glyphicon glyphicon-play" title="Не началась"></i>[#endif#]
