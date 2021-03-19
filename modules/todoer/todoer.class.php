@@ -398,7 +398,7 @@ if (SETTINGS_TODOER_SOONLIMIT) {
 	$rec = SQLSelectOne("SELECT * FROM clnd_events WHERE ID=".$id);
 
 	if(!$rec) {
-		debmes('Bad task id ='. $id,'todoer');
+		debmes('Bad deleting task id ='. $id,'todoer');
 		return; 
 	}
 	$tm = time();
@@ -702,7 +702,7 @@ function processSubscription($event, $details=''){
 
 /**
 * create_new_task
-* no_double = 1  do not create task if exists the same
+* no_double = 1  do not create task if exists the same (overwrite?)
 * @access public
 */
 function create_new_task($task, $no_double=0){
@@ -713,14 +713,19 @@ if($task['TITLE']){
 	return "no title - no task!";
 }
 if($no_double){
-	$tst = SQLSELECTONE("select ID from clnd_events where `TITLE`='".$task['TITLE']."'");
-	if($tst){
-		return "task with this title exists!";
-	}
+	//$tst = SQLSELECTONE("select ID from clnd_events where `TITLE`='".$task['TITLE']."'");
+	//if($tst){
+	//	return "task with this title exists!";
+	//}
+	SQLEXEC("delete from clnd_events where `TITLE`='".$task['TITLE']."'");
 }
-$task['DUE']?$rec['DUE'] = $task['DUE']:$rec['DUE'] = date('Y-m-d H:i:00');
-$task['END_TIME']?$rec['END_TIME'] = $task['END_TIME']:$rec['END_TIME'] = date('Y-m-d H:i:00');
-//...
+if($task['IS_NODATE']){
+	$rec['IS_NODATE'] = 1;
+}else{
+	$rec['IS_NODATE'] = 0;
+	$task['DUE']?$rec['DUE'] = $task['DUE']:$rec['DUE'] = date('Y-m-d H:i:00');
+	$task['END_TIME']?$rec['END_TIME'] = $task['END_TIME']:$rec['END_TIME'] = date('Y-m-d H:i:00');
+}
 if($task['NOTES'])$rec['NOTES'] = $task['NOTES'];
 if($task['IS_REPEATING'])$rec['IS_REPEATING'] = $task['IS_REPEATING'];
 if($task['REPEAT_TYPE'])$rec['REPEAT_TYPE'] = $task['REPEAT_TYPE'];
