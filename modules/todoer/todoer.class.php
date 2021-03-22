@@ -542,7 +542,7 @@ if (SETTINGS_TODOER_SOONLIMIT) {
      if($remd < $tm) $remd = $tm + 60; //must be in future
 	 if($rec['REMIND_TIMER'] > 7 || $rec['ALL_DAY']){//напоминания для Напомнить за день - в стандартное время
 		$standart_remind_time = (SETTINGS_TODOER_STD_REMIND)?SETTINGS_TODOER_STD_REMIND:"12:00";
-		$remd = strtotime(date('Y-m-d H:i:00', strtotime(date('Y-m-d')." ".$standart_remind_time.":00"),$remd));
+		$remd = strtotime(date('Y-m-d H:i:00', strtotime(date('Y-m-d',$remd)." ".$standart_remind_time.":00")));
 	 }
      $rec['REMIND_TIME'] = date('Y-m-d H:i'.':00', $remd);
 	 $rec['IS_REMIND'] = 1;
@@ -951,6 +951,39 @@ function _parseCronNumbers1($s,$min,$max){
         ksort($result);
         return $result;
     } 
+
+/**
+* data_out выдадим данные в массиве по параметру - для тех, кто не любит запросы писать
+* what -> all, today, soon, latest, recently_done, done, overdue, nodate или явное выражение sql для фильтра where
+* @access public
+*/
+function  data_out($what='all')
+{
+	$qry = "1=1";
+	$what = trim($what);
+	if($what == "all" || $what == ''){
+		$qry .= "";
+	}elseif($what == "today"){
+		$qry .= " and TO_DAYS(DUE)<=TO_DAYS(NOW()) and TO_DAYS(END_TIME)>=TO_DAYS(NOW()) and IS_NODATE=0";
+	}elseif($what == "soon"){
+		$qry .= " and TO_DAYS(DUE)>=TO_DAYS(NOW())+1 and TO_DAYS(END_TIME)>=TO_DAYS(NOW())+1 and IS_NODATE=0 AND TO_DAYS(DUE)<=TO_DAYS(NOW())+".SETTINGS_TODOER_SOONLIMIT;
+	}elseif($what == "latest"){//недавно
+		$qry .= " and TO_DAYS(DUE)<=TO_DAYS(NOW()) and IS_NODATE=0 AND TO_DAYS(DUE)>=TO_DAYS(NOW())- 7";
+	}elseif($what == "nodate"){
+		$qry .= " and IS_NODATE=1";
+	}elseif($what == "overdue"){
+		$qry .= " and IS_DONE=2 AND holidays=0";
+	}elseif($what == "recently_done"){		//recently done
+		$qry .= " and ((IS_DONE=1 AND TO_DAYS(NOW())-TO_DAYS(DONE_WHEN)<=1) OR (IS_REPEATING=1 AND NOW() between END_TIME and DUE))";
+	}elseif($what == "done"){		
+		$qry .= " and IS_DONE=1";
+	}else{//free form
+		$qry .= $what ;
+	}
+	$res = SQLSelect("SELECT clnd_events.*,clnd_categories.TITLE as CATEGORY,clnd_categories.ICON,clnd_categories.holidays CAT_HDAYS,clnd_categories.AT_CALENDAR, (SELECT COUNT( d.ID ) FROM clnd_events d WHERE d.parent_id = clnd_events.id ) IS_MAIN FROM clnd_events left join clnd_categories ON clnd_events.calendar_category_id=clnd_categories.id WHERE $qry ORDER BY IS_NODATE DESC,DUE");
+	 return $res;
+}
+
 
 /**
 * Install
