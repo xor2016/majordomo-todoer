@@ -269,69 +269,7 @@ function usual(&$out) {
 if(SETTINGS_TODOER_SHOWMAINONLY){
 	$hidetask = " and clnd_events.parent_id=0";
 }
-/*
-  $events_today = SQLSelect("SELECT  DATE_FORMAT( clnd_events.due, '%d.%m.%y %H:%i' ) due_time, DATE_FORMAT( clnd_events.end_time,'%d.%m.%y %H:%i' ) end_time_frmt,clnd_events.*, clnd_categories.ICON, (SELECT COUNT( d.ID ) FROM clnd_events d WHERE d.parent_id = clnd_events.id ) IS_MAIN,clnd_categories.title CAT_NAME FROM clnd_events left join clnd_categories on clnd_events.calendar_category_id=clnd_categories.id  WHERE TO_DAYS(DUE)<=TO_DAYS(NOW()) and END_TIME>=NOW() and IS_NODATE=0 AND IS_DONE=0 AND ifnull(AT_CALENDAR,1)!=0 $hidetask ORDER BY DUE");
 
-  if ($events_today) {
-   $out['EVENTS_TODAY'] = $events_today;
-   $out['EVENTS_TODAY_REC_COUNT'] = count($events_today);
-   $out['TODAY_DATE'] = date('d.m.y');
-  }
-
-//no date with progress
-$events_nodate = SQLSelect("SELECT DATE_FORMAT( clnd_events.due, '%H:%i' ) due_time, clnd_events . * , clnd_categories.ICON, (SELECT COUNT( d.ID ) FROM clnd_events d WHERE d.parent_id = clnd_events.id ) IS_MAIN, (  SELECT round(SUM( c.IS_DONE ) * 100 / COUNT( c.ID )) FROM clnd_events c WHERE c.PARENT_ID = clnd_events.ID ) PR,clnd_categories.title CAT_NAME FROM clnd_events clnd_events LEFT JOIN clnd_categories ON clnd_events.calendar_category_id = clnd_categories.id WHERE IS_NODATE=1 AND IS_DONE=0 AND ifnull(AT_CALENDAR,1)!=0 $hidetask ORDER BY TITLE");
-
-  if ($events_nodate) {
-   $out['EVENTS_NODATE']=$events_nodate;
-   $out['EVENTS_NODATE_REC_COUNT'] = count ($events_nodate);
-  }
-//tomoroow
-  $events_tomorrow = SQLSelect("SELECT  DATE_FORMAT( clnd_events.due, '%d.%m.%y %H:%i' ) due_time,DATE_FORMAT( clnd_events.end_time,'%d.%m.%y %H:%i' ) end_time_frmt, clnd_events.*,clnd_categories.ICON, (SELECT COUNT( d.ID ) FROM clnd_events d WHERE d.parent_id = clnd_events.id ) IS_MAIN,clnd_categories.title CAT_NAME FROM clnd_events left join clnd_categories on clnd_events.calendar_category_id=clnd_categories.id  WHERE  (TO_DAYS(DUE)=TO_DAYS(NOW())+1 or TO_DAYS(END_TIME)=TO_DAYS(NOW())+1) and IS_NODATE=0 AND IS_DONE=0 AND ifnull(AT_CALENDAR,1)!=0 $hidetask ORDER BY DUE");
-
-  if ($events_tomorrow) {
-   $out['EVENTS_TOMORROW']=$events_tomorrow;
-   $out['EVENTS_TOMORROW_REC_COUNT'] = count($events_tomorrow);
-   $out['TOMORROW_DATE'] = date('d.m.y',strtotime("+1 day"));
-
-  }
-////////////////////////////////////////////////////////////////////////
-if (SETTINGS_TODOER_SOONLIMIT) {
-  $soon_limit = SETTINGS_TODOER_SOONLIMIT;
-}else{
-  $soon_limit = 14;
-}
-  $events_after = SQLSelect("SELECT DATE_FORMAT( clnd_events.due, '%d.%m.%y %H:%i' ) due_time, DATE_FORMAT( clnd_events.due, '%d.%m.%y' ) due_date, DATE_FORMAT( clnd_events.end_time,'%d.%m.%y %H:%i' ) end_time_frmt, clnd_events.*,clnd_categories.ICON, (SELECT COUNT( d.ID ) FROM clnd_events d WHERE d.parent_id = clnd_events.id ) IS_MAIN,clnd_categories.title CAT_NAME FROM clnd_events left join clnd_categories on clnd_events.calendar_category_id=clnd_categories.id  WHERE  TO_DAYS(DUE)>=TO_DAYS(NOW())+2 and TO_DAYS(END_TIME)>=TO_DAYS(NOW())+2 and IS_NODATE=0 AND IS_DONE=0 and TO_DAYS(DUE)<=TO_DAYS(NOW())+ $soon_limit  AND ifnull(AT_CALENDAR,1)!=0 $hidetask ORDER BY DUE");
-
-  if ($events_after) {
-   $out['EVENTS_AFTER']=$events_after;
-   $out['EVENTS_AFTER_REC_COUNT'] = count ($events_after);
-  }
-//просроченная задача
-  $events_overdue = SQLSelect("SELECT DATE_FORMAT( clnd_events.due, '%d.%m.%y %H:%i' ) due_time, DATE_FORMAT( clnd_events.end_time,'%d.%m.%y %H:%i' ) end_time_frmt, clnd_events.*,clnd_categories.ICON,clnd_categories.title CAT_NAME FROM clnd_events left join clnd_categories on clnd_events.calendar_category_id=clnd_categories.id  WHERE IS_DONE=2 AND ((ifnull(AT_CALENDAR,1)!=0 AND holidays=0) or clnd_categories.title is null)  ORDER BY DUE");
-
-  if ($events_overdue) {
-   $out['EVENTS_OVERDUE']=$events_overdue;
-   $out['EVENTS_OVERDUE_REC_COUNT'] = count ($events_overdue);
-  }
-//все записи
-  $events_all = SQLSelect("SELECT  case when IS_NODATE=0 and ALL_DAY=0 then DATE_FORMAT( clnd_events.due, '%d.%m.%y %H:%i' ) else null end  due_time,case when IS_NODATE=0 and ALL_DAY=1 then DATE_FORMAT( clnd_events.due, '%d.%m.%y весь день' ) else null end due_date, DATE_FORMAT( clnd_events.end_time, '%d.%m.%y %H:%i' ) end_time_frmt, clnd_events.*,clnd_categories.ICON,clnd_categories.title CAT_NAME  FROM clnd_events left join clnd_categories on clnd_events.calendar_category_id=clnd_categories.id  WHERE 1=1 ORDER BY IS_NODATE desc, DUE desc");
-
-  if ($events_all) {
-   $out['EVENTS_ALL']=$events_all;
-   //$out['EVENTS_ALL_REC_COUNT'] = count ($events_all);
-  }
-
-  if (SETTINGS_TODOER_SHOWDONE == '1') {
-   $out['SHOWDONE'] = 1;
-   $recently_done=SQLSelect("SELECT  DATE_FORMAT( clnd_events.due, '%d.%m.%y %H:%i' ) as due_time, DATE_FORMAT( clnd_events.end_time,'%d.%m.%y %H:%i' ) end_time_frmt, clnd_events.*, clnd_categories.ICON,clnd_categories.title CAT_NAME FROM clnd_events left join clnd_categories on clnd_events.calendar_category_id=clnd_categories.id  WHERE (IS_DONE=1 AND TO_DAYS(NOW())-TO_DAYS(DONE_WHEN)<=1) OR (IS_REPEATING=1 AND NOW() between END_TIME and DUE)")  ;
-   if ($recently_done) {
-    $out['RECENTLY_DONE']=$recently_done;
-    $out['RECENTLY_DONE_REC_COUNT'] = count($recently_done);
-   }
-  }
-
-  $out['CATEGORIES'] = SQLSelect("SELECT * from clnd_categories ORDER BY TITLE");
-*/
  }//$this->view_mode==''
 }
 
@@ -394,7 +332,6 @@ if (SETTINGS_TODOER_SOONLIMIT) {
 
 
  function task_done($id, $autoend = 0) {
-
 	$rec = SQLSelectOne("SELECT * FROM clnd_events WHERE ID=".$id);
 
 	if(!$rec) {
@@ -498,27 +435,42 @@ if (SETTINGS_TODOER_SOONLIMIT) {
 		     }
 		   } elseif ($rec['REPEAT_TYPE'] == 4) {//дни
 		       $due_time_next_day = $due_time + $repeat_in*24*60*60;
+				if($due_time_next_day <= $tm){ //in future only!
+					$due_time_next_day = $tm + 60;
+				}
+/*
 				while ($due_time_next_day <= $tm){ //in future only!
 					$due_time_next_day = $due_time_next_day + $repeat_in*24*60*60;
 				}
+*/
 		       $new_due = date('Y-m-d H:i:00', $due_time_next_day);
 		       $new_end = date('Y-m-d H:i:00', $due_time_next_day + $duration);
 		
 		   } elseif ($rec['REPEAT_TYPE'] == 5) {//часы
 				
 		       $due_time_next_hour = $due_time + $repeat_in*60*60;
+				if($due_time_next_hour <= $tm){ //in future only!
+					$due_time_next_hour = $tm + 60;
+				}
+/*
 				while ($due_time_next_hour <= $tm){ //in future only!
 					$due_time_next_hour = due_time_next_hour + $repeat_in*60*60;
 				}
+*/
 		       $new_due = date('Y-m-d H:i:00', $due_time_next_hour);
 		       $new_end = date('Y-m-d H:i:00', $due_time_next_hour + $duration);
 		
 		   } elseif ($rec['REPEAT_TYPE'] == 6) {//минуты
 
 				$due_time_next_minute = $due_time + $repeat_in*60;
+				if($due_time_next_minute <= $tm){ //in future only!
+					$due_time_next_minute = $tm + 60;
+				}
+/*
 				while ($due_time_next_minute <= $tm){ //in future only!
 					$due_time_next_minute = $due_time_next_minute + $repeat_in*60;
 				}
+*/
 		       $new_due = date('Y-m-d H:i:00', $due_time_next_minute);
 		       $new_end = date('Y-m-d H:i:00', $due_time_next_minute + $duration);
 			}
@@ -541,8 +493,8 @@ if (SETTINGS_TODOER_SOONLIMIT) {
      $remd = strtotime($new_due) - $delta[$remind_timer];
      if($remd < $tm) $remd = $tm + 60; //must be in future
 	 if($rec['REMIND_TIMER'] > 7 || $rec['ALL_DAY']){//напоминания для Напомнить за день - в стандартное время
-		$standart_remind_time = (SETTINGS_TODOER_STD_REMIND)?SETTINGS_TODOER_STD_REMIND:"12:00";
-		$remd = strtotime(date('Y-m-d H:i:00', strtotime(date('Y-m-d',$remd)." ".$standart_remind_time.":00")));
+		//$standart_remind_time = (SETTINGS_TODOER_STD_REMIND)?SETTINGS_TODOER_STD_REMIND:"12:00";
+		$remd = strtotime(date('Y-m-d H:i:00', strtotime(date('Y-m-d',$remd)." ".SETTINGS_TODOER_STD_REMIND)));
 	 }
      $rec['REMIND_TIME'] = date('Y-m-d H:i'.':00', $remd);
 	 $rec['IS_REMIND'] = 1;
