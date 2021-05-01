@@ -408,7 +408,11 @@ if(SETTINGS_TODOER_SHOWMAINONLY){
 		   } elseif ($rec['REPEAT_TYPE'] == 3) {//недели
 		     if(!$rec['WEEK_DAYS']){
 			       // weekly task
-			      $due_time_next_week = $due_time + 7*24*60*60;
+			      $due_time_next_week = $due_time + $repeat_in*7*24*60*60;
+					if($due_time_next_week <= $tm){ 
+						$tt = (int)(($tm - $due_time)/($repeat_in*7*24*60*60));
+						$due_time_next_week = $due_time + $tt*$repeat_in*7*24*60*60;
+					}
 			      $new_due = date('Y-m-d H:i:00', $due_time_next_week);
 			      $new_end = date('Y-m-d H:i:00', $due_time_next_week + $duration);
 			
@@ -435,14 +439,10 @@ if(SETTINGS_TODOER_SHOWMAINONLY){
 		     }
 		   } elseif ($rec['REPEAT_TYPE'] == 4) {//дни
 		       $due_time_next_day = $due_time + $repeat_in*24*60*60;
-				if($due_time_next_day <= $tm){ //in future only!
-					$due_time_next_day = $tm + 60;
+				if($due_time_next_day <= $tm){ 
+					$tt = (int)(($tm - $due_time)/($repeat_in*24*60*60));
+					$due_time_next_day = $due_time + $tt*$repeat_in*24*60*60;
 				}
-/*
-				while ($due_time_next_day <= $tm){ //in future only!
-					$due_time_next_day = $due_time_next_day + $repeat_in*24*60*60;
-				}
-*/
 		       $new_due = date('Y-m-d H:i:00', $due_time_next_day);
 		       $new_end = date('Y-m-d H:i:00', $due_time_next_day + $duration);
 		
@@ -450,13 +450,10 @@ if(SETTINGS_TODOER_SHOWMAINONLY){
 				
 		       $due_time_next_hour = $due_time + $repeat_in*60*60;
 				if($due_time_next_hour <= $tm){ //in future only!
-					$due_time_next_hour = $tm + 60;
+					$tt = (int)(($tm - $due_time)/($repeat_in*60*60));
+					$due_time_next_hour = $due_time + $tt*$repeat_in*60*60;
 				}
-/*
-				while ($due_time_next_hour <= $tm){ //in future only!
-					$due_time_next_hour = due_time_next_hour + $repeat_in*60*60;
-				}
-*/
+
 		       $new_due = date('Y-m-d H:i:00', $due_time_next_hour);
 		       $new_end = date('Y-m-d H:i:00', $due_time_next_hour + $duration);
 		
@@ -464,13 +461,10 @@ if(SETTINGS_TODOER_SHOWMAINONLY){
 
 				$due_time_next_minute = $due_time + $repeat_in*60;
 				if($due_time_next_minute <= $tm){ //in future only!
-					$due_time_next_minute = $tm + 60;
+					$tt = (int)(($tm - $due_time)/($repeat_in*60));
+					$due_time_next_minute = $due_time + $tt*$repeat_in*60;
 				}
-/*
-				while ($due_time_next_minute <= $tm){ //in future only!
-					$due_time_next_minute = $due_time_next_minute + $repeat_in*60;
-				}
-*/
+
 		       $new_due = date('Y-m-d H:i:00', $due_time_next_minute);
 		       $new_end = date('Y-m-d H:i:00', $due_time_next_minute + $duration);
 			}
