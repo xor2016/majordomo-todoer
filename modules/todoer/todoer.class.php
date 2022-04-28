@@ -924,7 +924,7 @@ function  data_out($what='all')
 	}elseif($what == "done"){		
 		$qry .= " and IS_DONE=1";
 	}else{//free form
-		$qry .= $what ;
+		$qry .= " ".$what ;
 	}
 	$res = SQLSelect("SELECT clnd_events.*,clnd_categories.TITLE as CATEGORY,clnd_categories.ICON,clnd_categories.holidays CAT_HDAYS,clnd_categories.AT_CALENDAR, (SELECT COUNT( d.ID ) FROM clnd_events d WHERE d.parent_id = clnd_events.id ) IS_MAIN FROM clnd_events left join clnd_categories ON clnd_events.calendar_category_id=clnd_categories.id WHERE $qry ORDER BY IS_NODATE DESC,DUE");
 	 return $res;
