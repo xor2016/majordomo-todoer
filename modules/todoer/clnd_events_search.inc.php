@@ -105,9 +105,9 @@ if($clnd_cat_hide == "1" ){
   }
 	//Categories
     if( $clnd_cat_hide){
-		$res = sqlselect("select * from clnd_categories where ifnull(AT_CALENDAR,1)!=0");
+		$res = sqlselect("select ID,TITLE from clnd_categories where ifnull(AT_CALENDAR,1)!=0");
 	}else{
-		$res = sqlselect("select * from clnd_categories");
+		$res = sqlselect("select 0 ID,'Без категории' TITLE from DUAL union all select ID,TITLE from clnd_categories");
     }
 	$out['CATEGORIES'] = $res;
 	//Users

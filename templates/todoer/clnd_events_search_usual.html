@@ -22,7 +22,7 @@
 			<div class="form-group">
 					<select name="calendar_category_id" class="form-control" onchange="this.form.submit();">
 						<option value="">Категория</option>
-						<option value="0"[#if CALENDAR_CATEGORY_ID="0"#] selected[#endif#]>Без категории</option>
+					
 						[#begin CATEGORIES#]
 						<option value="[#ID#]"[#if ID="<#CALENDAR_CATEGORY_ID#>"#] selected[#endif#]>[#TITLE#]</option>
 						[#end CATEGORIES#]
