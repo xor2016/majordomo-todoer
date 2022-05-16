@@ -328,6 +328,7 @@ if(SETTINGS_TODOER_SHOWMAINONLY){
 */
  function delete_clnd_categories($id) {
   SQLExec("DELETE FROM `clnd_categories` WHERE `ID`='".$id."'");
+  SQLExec("UPDATE clnd_events SET CALENDAR_CATEGORY_ID=0 WHERE CALENDAR_CATEGORY_ID=".$id);
  }
 /**
 * Title
