@@ -322,6 +322,14 @@ if(SETTINGS_TODOER_SHOWMAINONLY){
   require(DIR_MODULES.$this->name.'/clnd_categories_edit.inc.php');
  }
 /**
+* calendar_categories delete
+*
+* @access public
+*/
+ function delete_clnd_categories($id) {
+  SQLExec("DELETE FROM `clnd_categories` WHERE `ID`='".$id."'");
+ }
+/**
 * Title
 *
 * Description mark task doned
@@ -929,7 +937,15 @@ function  data_out($what='all')
 	$res = SQLSelect("SELECT clnd_events.*,clnd_categories.TITLE as CATEGORY,clnd_categories.ICON,clnd_categories.holidays CAT_HDAYS,clnd_categories.AT_CALENDAR, (SELECT COUNT( d.ID ) FROM clnd_events d WHERE d.parent_id = clnd_events.id ) IS_MAIN FROM clnd_events left join clnd_categories ON clnd_events.calendar_category_id=clnd_categories.id WHERE $qry ORDER BY IS_NODATE DESC,DUE");
 	 return $res;
 }
-
+    // Find data in module
+    function findData($data) {
+        $res = array();
+        $tasks = SQLSelect("SELECT `ID`,`TITLE` FROM `clnd_events` WHERE `TITLE` like '%" . DBSafe($data) . "%' OR `NOTES` like '%" . DBSafe($data) . "%' or `DONE_CODE` like '%" . DBSafe($data) . "%' or `REMIND_CODE` like '%" . DBSafe($data) . "%' or `BEGIN_CODE` like '%" . DBSafe($data) . "%' order by TITLE");
+        foreach($tasks as $task){
+        $res[]= '<span class="label label-primary">Task</span>&nbsp;<a href="/panel/todoer.html?md=todoer&view_mode=edit_clnd_events&id=' . $task['ID'] . '.html">' . $task['TITLE']. '</a>';
+        }
+        return $res;
+    }
 
 /**
 * Install
