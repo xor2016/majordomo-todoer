@@ -1,3 +1,4 @@
+[#if VIEW_MODE=""#]
 <ul class="nav nav-tabs">
  <li [#if DATA_SOURCE!="clnd_events" && DATA_SOURCE!=""#][#else#]class="active"[#endif#]><a href="?data_source=clnd_events"><span class="glyphicon glyphicon-list-alt"></span> Все записи</a></li>
  <li [#if DATA_SOURCE="clnd_full"#]class="active"[#endif#]><a href="?data_source=clnd_full"><span class="glyphicon glyphicon-calendar"></span> Календарь на год</a></li>
@@ -5,7 +6,7 @@
  <li [#if DATA_SOURCE="clnd_settings"#]class="active"[#endif#]><a href="?data_source=clnd_settings"><span class="glyphicon glyphicon-cog"></span> Настройки</a></li>
  <li [#if DATA_SOURCE="catinfo"#]class="active"[#endif#]><a href="?data_source=catinfo"><span class="glyphicon glyphicon-info-sign"></span> Помощь</a></li>
 </ul>
-
+[#endif VIEW_MODE#]
 [#if DATA_SOURCE="clnd_settings"#] 
 <br>
 <big><a href="<#ROOTHTML#>apps/todoer.html" class="btn btn-default" target=_blank><#LANG_PREVIEW#></a></big>

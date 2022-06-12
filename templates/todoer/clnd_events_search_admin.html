@@ -19,24 +19,24 @@
 				<b>Фильтры:</b>
 			</div>
 			<div class="form-group">
-					<select name="calendar_category_id" class="form-control" onchange="this.form.submit();">
+					<select name="calendar_category_idF" class="form-control" onchange="this.form.submit();">
 						<option value="">Категория</option>
 						[#begin CATEGORIES#]
-						<option value="[#ID#]"[#if ID="<#CALENDAR_CATEGORY_ID#>"#] selected[#endif#]>[#TITLE#]
+						<option value="[#ID#]"[#if ID="<#CALENDAR_CATEGORY_IDF#>"#] selected[#endif#]>[#TITLE#]
 						[#end CATEGORIES#]
 					</select>
 			</div>
 			<div class="form-group">
-					<select name="clnd_user" class="form-control" onchange="this.form.submit();">
+					<select name="clnd_userF" class="form-control" onchange="this.form.submit();">
 						<option value="">Пользователь</option>
-						<option value="0"[#if CLND_USER="0"#] selected[#endif#]>Не назначен</option>
+						<option value="0"[#if CLND_USERF="0"#] selected[#endif#]>Не назначен</option>
 						[#begin USERS#]
-						<option value="[#ID#]"[#if ID="<#CLND_USER#>"#] selected[#endif#]>[#NAME#]
+						<option value="[#ID#]"[#if ID="<#CLND_USERF#>"#] selected[#endif#]>[#NAME#]
 						[#end USERS#]
 					</select>
 			</div>
 			<div class="form-group">
-			<input autofocus placeholder="Название задачи" class="form-control" type="input" name="title" value="[#TITLE#]" >
+			<input autofocus placeholder="Название задачи" class="form-control" type="input" name="titleF" value="[#TITLE_F#]" >
 			</div>
 			<div class="form-group">
 					<select name="clnd_date_search" class="form-control" onchange="this.form.submit();">

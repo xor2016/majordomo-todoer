@@ -15,20 +15,20 @@
   $qry="1";
   // search filters
   //searching 'TITLE' (varchar)
-  global $title;
-  if ($title!='') {
-   $qry.=" AND clnd_events.TITLE LIKE '%".DBSafe($title)."%'";
-   $out['TITLE']=$title;
+  global $titleF;
+  if ($titleF!='') {
+   $qry.=" AND clnd_events.TITLE LIKE '%".DBSafe($titleF)."%'";
+   $out['TITLE_F']=$titleF;
   }
-  global $calendar_category_id;
-  if ($calendar_category_id!="") {
-	$out['CALENDAR_CATEGORY_ID']=(int)$calendar_category_id;
-	$qry.=" AND clnd_events.CALENDAR_CATEGORY_ID=".$out['CALENDAR_CATEGORY_ID'];
+  global $calendar_category_idF;
+  if ($calendar_category_idF!="") {
+	$out['CALENDAR_CATEGORY_IDF']=(int)$calendar_category_idF;
+	$qry.=" AND clnd_events.CALENDAR_CATEGORY_ID=".$out['CALENDAR_CATEGORY_IDF'];
   }
-global $clnd_user;
-if($clnd_user != ""){
-	$out['CLND_USER']=(int)$clnd_user;
-	$qry.=" AND clnd_events.USER_ID=".$out['CLND_USER'];
+global $clnd_userF;
+if($clnd_userF != ""){
+	$out['CLND_USERF']=(int)$clnd_userF;
+	$qry.=" AND clnd_events.USER_ID=".$out['CLND_USERF'];
 }
 global $clnd_date_search;
 if($clnd_date_search != ""){

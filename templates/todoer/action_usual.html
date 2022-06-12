@@ -11,7 +11,6 @@
  <li [#if DATE_SEARCH="2"#]class="active"[#endif#]><a href="?data_source=clnd_events&clnd_date_search=2&tab=nexts"><i style="color:CadetBlue;" class="glyphicon glyphicon-tags"></i>&nbsp;Скоро <span class="badge">{#COUNT_SOON#}</span></a></li>
  <li [#if DATE_SEARCH="4"#]class="active"[#endif#]><a href="?data_source=clnd_events&clnd_date_search=4&tab=no_date"><i style="color:CadetBlue;" class="glyphicon glyphicon-bookmark"></i> Без даты <span class="badge">{#COUNT_IS_NODATE#}</span></a></li>
  <li [#if DATA_SOURCE="clnd_full"#]class="active"[#endif#]><a href="?data_source=clnd_full"><span class="glyphicon glyphicon-calendar"></span>&nbsp;Календарь на год</a></li>
-  
 
 </ul>
 [#if DATA_SOURCE!="clnd_full"#]
@@ -33,4 +32,5 @@
 [#if VIEW_MODE="edit_clnd_events"#]
 [#inc clnd_events_edit.html#]
 [#endif VIEW_MODE#]  
+
 

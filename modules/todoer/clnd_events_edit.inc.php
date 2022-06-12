@@ -3,10 +3,13 @@
 * @version 0.1 (wizard)
 */
  $tm = time();
-
+  if ($this->owner->name=='panel') {
+   $out['CONTROLPANEL']=1;
+  }else{
+   $out['CONTROLPANEL']=0;
+  }
   global $title;
   global $id;
-
   if ($id) {
 	$rec=SQLSelectOne("SELECT * FROM clnd_events WHERE ID='".(int)$id."'");
 
@@ -14,7 +17,7 @@
 		SQLExec("DELETE FROM clnd_events WHERE ID='".(int)$rec['ID']."'");
 		//освободим подчиненные задачи
 		SQLExec("UPDATE clnd_events SET PARENT_ID=0 WHERE PARENT_ID='".$rec['ID']."'");
-	$this->redirect("?");
+	$this->redirect("?data_source=clnd_events");
 }
 
   } else { 
@@ -34,7 +37,6 @@
 
   if ($this->mode=='update') {
    $ok=1;
-
    //global $is_task;
    global $notes;
 
@@ -203,26 +205,24 @@
 
 ////////////////////////////////
 }
+       
    if ($ok) {
     if ($rec['ID']) {
      SQLUpdate('clnd_events', $rec);
     } else {
+
      $rec['ADDED'] = date('Y-m-d H:i:s');
      $rec['ID'] = SQLInsert('clnd_events', $rec);
     }
+
     if ($marked_done) {
      $this->task_done($rec['ID'],1);
+     $this->redirect("?");//уходим
     }
-
-    $this->redirect("?");
    }
 
-
-  //}
-
-
-  outHash($rec, $out);
   $out['DONE_WHEN'] = date('d.m.Y H:i:00',strtotime($rec['DONE_WHEN']));
+  //outHash($rec, $out);
   $out['USERS'] = SQLSelect("SELECT * FROM users ORDER BY NAME");
   //$out['LOCATIONS']=SQLSelect("SELECT * FROM gpslocations ORDER BY TITLE");
   //$out['SCRIPTS'] = SQLSelect("SELECT ID, TITLE FROM scripts ORDER BY TITLE");
@@ -270,8 +270,8 @@ $months = array(1=>"Янв","Фев","Мар","Апр","Май","Июн","Июл
 	//список задач для выбора главной 
     $out['FOR_LINKED_TASKS'] = SQLSelect("SELECT clnd_events.`ID`, clnd_events.`TITLE`,clnd_events.`DUE`,clnd_events.`PARENT_ID` ,clnd_categories.ICON FROM clnd_events left join clnd_categories on clnd_events.calendar_category_id=clnd_categories.id WHERE (`IS_DONE`=0 or `IS_REPEATING`=1) and clnd_events.`ID`<>".$out['ID']." order by `TITLE`");
 }
-    
 
-
+echo "."; //???? без этого не работает
+outHash($rec, $out);
 //end file
 

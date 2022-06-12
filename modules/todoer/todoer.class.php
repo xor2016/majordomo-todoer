@@ -190,20 +190,14 @@ function admin(&$out) {
   }
   if ($this->view_mode=='edit_clnd_events') {
    $this->edit_clnd_events($out, $this->id);
+   
   }
   if ($this->view_mode=='delete_clnd_events') {
    $this->delete_clnd_events($this->id);
-   //$this->redirect("?");
 	$this->redirect("?data_source=clnd_events");
   }
  }
-/*
- if ($this->data_source=='clnd_categories') {
-  if ($this->view_mode=='' || $this->view_mode=='search_clnd_categories') {
-   $this->search_clnd_categories($out);
-  }
-}
-*/
+
  if ($this->view_mode=='delete_past_events') {
    $this->delete_past_events();
    $this->redirect("?data_source=clnd_events");
@@ -237,7 +231,7 @@ function admin(&$out) {
 * Module frontend
 *
 * @access public
-*/
+
 function usual(&$out) {
  if ($this->view_mode=='edit') {
   $this->edit_clnd_events($out,$this->$id);
@@ -272,7 +266,7 @@ if(SETTINGS_TODOER_SHOWMAINONLY){
 
  }//$this->view_mode==''
 }
-
+*/
 
 /**
 * clnd_events search
@@ -290,9 +284,7 @@ if(SETTINGS_TODOER_SHOWMAINONLY){
  function edit_clnd_events(&$out, $id) {
 	require(dirname(__FILE__).'/clnd_events_edit.inc.php');
 }
- function usual_edit(&$out, $id) {
- 	require(dirname(__FILE__).'/clnd_events_edit.inc.php');
-}
+
 /** ???? 
 * clnd_events delete record
 *
