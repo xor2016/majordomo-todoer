@@ -661,19 +661,24 @@ if($task['TITLE']){
 	return "no title - no task!";
 }
 if($no_double){
-	//$tst = SQLSELECTONE("select ID from clnd_events where `TITLE`='".$task['TITLE']."'");
-	//if($tst){
-	//	return "task with this title exists!";
-	//}
 	SQLEXEC("delete from clnd_events where `TITLE`='".$task['TITLE']."'");
 }
+
 if($task['IS_NODATE']){
 	$rec['IS_NODATE'] = 1;
 }else{
 	$rec['IS_NODATE'] = 0;
-	$task['DUE']?$rec['DUE'] = $task['DUE']:$rec['DUE'] = date('Y-m-d H:i:00');
-	$task['END_TIME']?$rec['END_TIME'] = $task['END_TIME']:$rec['END_TIME'] = date('Y-m-d H:i:00');
+    if($task['ALL_DAY']){
+	  $rec['ALL_DAY'] = 1;
+      $task['DUE']?$rec['DUE'] = $task['DUE']:$rec['DUE'] = date('Y-m-d 00:00:00');
+	  $task['END_TIME']?$rec['END_TIME'] = $task['END_TIME']:$rec['END_TIME'] = date('Y-m-d 23:59:00');
+    }else{
+      $rec['ALL_DAY'] = 0;
+	  $task['DUE']?$rec['DUE'] = $task['DUE']:$rec['DUE'] = date('Y-m-d H:i:00');
+	  $task['END_TIME']?$rec['END_TIME'] = $task['END_TIME']:$rec['END_TIME'] = date('Y-m-d H:i:00');
+    }
 }
+
 if($task['NOTES'])$rec['NOTES'] = $task['NOTES'];
 if($task['IS_REPEATING'])$rec['IS_REPEATING'] = $task['IS_REPEATING'];
 if($task['REPEAT_TYPE'])$rec['REPEAT_TYPE'] = $task['REPEAT_TYPE'];
@@ -683,6 +688,10 @@ if($task['DONE_CODE'])$rec['DONE_CODE'] = $task['DONE_CODE'];
 if($task['AUTODONE'])$rec['AUTODONE'] = $task['AUTODONE'];
 $task['REPEAT_UNTIL']?$rec['REPEAT_UNTIL'] = $task['REPEAT_UNTIL']:$rec['REPEAT_UNTIL'] = date('Y-m-d H:i:00');
 $task['REMIND_TIME']?$rec['REMIND_TIME'] = $task['REMIND_TIME']:$rec['REMIND_TIME'] = date('Y-m-d H:i:00');
+if($task['REMIND_TIME']){
+   $rec['IS_REMIND'] = 1;
+   $rec['REMIND_TIMER'] = 10;
+}
 if($task['CATEGORY']){
 	$cat = SQLSELECTONE("select * from clnd_categories where title like '%".dbsafe($task['CATEGORY'])."%'");
 	if($cat){
@@ -691,7 +700,7 @@ if($task['CATEGORY']){
 }
 //if($task['CATEGORY_ID'])$rec['CATEGORY_ID'] = $task['CATEGORY_ID'];
 $rec['ADDED'] = date('Y-m-d H:i:s');
-
+if($task['EX_ID'])$rec['EX_ID'] = $task['EX_ID'];
 return SQLInsert('clnd_events', $rec);
 }
 /**
@@ -954,6 +963,8 @@ function  data_out($what='all')
    mkdir(ROOT."./cms/todoer", 0777);
   }
   parent::install();
+  SQLExec("ALTER TABLE `clnd_events` ADD `EX_ID` VARCHAR(255) NULL");
+  SQLExec{"ALTER TABLE `clnd_events` ADD `LAST_SYNCHRO` TIMESTAMP NULL");
  }
 /**
 * Uninstall
