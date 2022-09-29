@@ -964,7 +964,7 @@ function  data_out($what='all')
   }
   parent::install();
   SQLExec("ALTER TABLE `clnd_events` ADD `EX_ID` VARCHAR(255) NULL");
-  SQLExec{"ALTER TABLE `clnd_events` ADD `LAST_SYNCHRO` TIMESTAMP NULL");
+  SQLExec("ALTER TABLE `clnd_events` ADD `LAST_SYNCHRO` TIMESTAMP NULL");
  }
 /**
 * Uninstall
