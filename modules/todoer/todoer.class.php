@@ -963,8 +963,8 @@ function  data_out($what='all')
    mkdir(ROOT."./cms/todoer", 0777);
   }
   parent::install();
-  SQLExec("ALTER TABLE `clnd_events` ADD `EX_ID` VARCHAR(255) NULL");
-  SQLExec("ALTER TABLE `clnd_events` ADD `LAST_SYNCHRO` TIMESTAMP NULL");
+  //SQLExec("ALTER TABLE `clnd_events` ADD `EX_ID` VARCHAR(255) NULL");
+  //SQLExec("ALTER TABLE `clnd_events` ADD `LAST_SYNCHRO` TIMESTAMP NULL");
  }
 /**
 * Uninstall
@@ -1028,6 +1028,8 @@ clnd_categories - Categories
  clnd_events: YE_MONTHS varchar(255) NOT NULL DEFAULT ''
  clnd_events: IS_BEGIN int(3) NOT NULL DEFAULT '0'
  clnd_events: LOCATION_ID int(10) NOT NULL DEFAULT '0'
+ clnd_events: EX_ID VARCHAR(255) NULL
+ clnd_events: LAST_SYNCHRO TIMESTAMP NULL
 
  clnd_categories: ID int(10) unsigned NOT NULL auto_increment
  clnd_categories: TITLE varchar(255) NOT NULL DEFAULT ''
