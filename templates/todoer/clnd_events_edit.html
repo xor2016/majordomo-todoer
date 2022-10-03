@@ -505,6 +505,7 @@
 							<option value="[#ID#]"[#if ID="<#PARENT_ID#>"#] selected[#endif#]>&nbsp;&nbsp;[#TITLE#]
 							[#end FOR_LINKED_TASKS#]
 							</select>
+                            [#if PARENT_ID>0 #]<a href="?view_mode=edit_clnd_events&id=[#PARENT_ID#]">перейти к главной</a>[#endif#]
 						</div>
 				</div>
 		</div>

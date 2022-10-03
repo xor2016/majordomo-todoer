@@ -26,18 +26,19 @@
 	$out['DUE'] = date('Y-m-d H:i:00', $tm);
 	$out['END_TIME'] = date('Y-m-d H:i:00', $tm);
 	$out['REMIND_TIME']= date('Y-m-d H:i:00', $tm);
-	//$out['IS_TASK'] = 0;
 	$out['IS_NODATE'] = 0;
 	$out['ALL_DAY'] = 0;
 	$out['IS_REPEATING'] = 0;
 	$out['REPEAT_UNTIL'] = date('Y-m-d H:i:00', $tm);
 	$out['LOG'] = '';
+    $out['PARENT_ID'] = 0;
+    $out['AUTODONE_BY_CHILDS'] = 0;
 
   }
 
   if ($this->mode=='update') {
    $ok=1;
-   //global $is_task;
+
    global $notes;
 
    $rec['TITLE']=$title;
@@ -47,7 +48,6 @@
     $out['ERR_TITLE']=1;
    }
 
-   //$rec['IS_TASK']=(int)$is_task;
    $rec['NOTES']=$notes;
 
    global $due; //начало события 
@@ -65,15 +65,11 @@
    global $is_repeating;//признак повтора
    $rec['IS_REPEATING']=(int)$is_repeating;
 
-   //global $is_repeating_after;//рудимент?
-   //$rec['IS_REPEATING_AFTER']=(int)$is_repeating_after;
    global $repeat_in;
    $rec['REPEAT_IN']=(int)$repeat_in;
 
    global $repeat_type;
    $rec['REPEAT_TYPE']=(int)$repeat_type;
-   
-
 
 
    $rec['IS_DONE']=(int)$is_done;
@@ -82,7 +78,10 @@
    $rec['IS_NODATE']=(int)$is_nodate;
    if ($is_nodate) {
     $rec['IS_REPEATING']=0; //ignore sets
-    $rec['ALL_DAY']=0;      
+    $rec['ALL_DAY']=0;
+    $rec['END_TIME'] = null;
+    $rec['DUE'] = null;
+    $all_day = 0;
    }
 
    global $all_day; //на весь день - с 00:00 до 23:59
@@ -112,10 +111,7 @@
 
    global $calendar_category_id;
    $rec['CALENDAR_CATEGORY_ID']=(int)$calendar_category_id;
-/*	
-   global $done_script_id;
-   $rec['DONE_SCRIPT_ID']=(int)$done_script_id;
-*/
+
    global $done_code;//код при закрытии задачи (is_done ставится в 1)
    $rec['DONE_CODE'] = $done_code;
 
@@ -217,7 +213,8 @@
 
     if ($marked_done) {
      $this->task_done($rec['ID'],1);
-     $this->redirect("?");//уходим
+     //$this->redirect("?");//уходим
+     $this->redirect("?data_source=clnd_events");
     }
    }
 
@@ -225,7 +222,6 @@
   //outHash($rec, $out);
   $out['USERS'] = SQLSelect("SELECT * FROM users ORDER BY NAME");
   //$out['LOCATIONS']=SQLSelect("SELECT * FROM gpslocations ORDER BY TITLE");
-  //$out['SCRIPTS'] = SQLSelect("SELECT ID, TITLE FROM scripts ORDER BY TITLE");
   $out['CALENDAR_CATEGORIES'] = SQLSelect("SELECT ID, TITLE from clnd_categories ORDER BY TITLE");
 //обработка дней недели
 $w_days = array();
@@ -256,19 +252,19 @@ $months = array(1=>"Янв","Фев","Мар","Апр","Май","Июн","Июл
 	   );
 	}
 
-  if ($out['ID']) {
+  if ($rec['ID']) {
     //подчиненные задачи + признак просрочки - overdue
-    $out['OTHERS'] = SQLSelect("SELECT ID, TITLE, IS_DONE, case when DUE < NOW() AND END_TIME< NOW() AND IS_DONE=0 AND IS_NODATE=0 then '1' else '0' end  OVERDUE FROM clnd_events WHERE PARENT_ID=".$out['ID']." ORDER BY TITLE");
+    $out['OTHERS'] = SQLSelect("SELECT ID, TITLE, IS_DONE, case when DUE < NOW() AND END_TIME< NOW() AND IS_DONE=0 AND IS_NODATE=0 then '1' else '0' end  OVERDUE FROM clnd_events WHERE PARENT_ID=".$rec['ID']." ORDER BY TITLE");
     $out['OTHERS_REC_COUNT'] = count($out['OTHERS']);
     //progress main ???
     if($out['OTHERS_REC_COUNT']>0) {
-      $rec = SQLSelectOne( "SELECT sum(IS_DONE)*100/count(ID) PR FROM clnd_events WHERE PARENT_ID=".$out['ID']);
-      $out['PROGRESS'] = round($rec['PR']);
+      $recs = SQLSelectOne( "SELECT sum(IS_DONE)*100/count(ID) PR FROM clnd_events WHERE PARENT_ID=".$rec['ID']);
+      $out['PROGRESS'] = round($recs['PR']);
     }else{
       $out['PROGRESS'] = 0;
     }
 	//список задач для выбора главной 
-    $out['FOR_LINKED_TASKS'] = SQLSelect("SELECT clnd_events.`ID`, clnd_events.`TITLE`,clnd_events.`DUE`,clnd_events.`PARENT_ID` ,clnd_categories.ICON FROM clnd_events left join clnd_categories on clnd_events.calendar_category_id=clnd_categories.id WHERE (`IS_DONE`=0 or `IS_REPEATING`=1) and clnd_events.`ID`<>".$out['ID']." order by `TITLE`");
+    $out['FOR_LINKED_TASKS'] = SQLSelect("SELECT clnd_events.`ID`, clnd_events.`TITLE`,clnd_events.`DUE`,clnd_events.`PARENT_ID` ,clnd_categories.ICON FROM clnd_events left join clnd_categories on clnd_events.calendar_category_id=clnd_categories.id WHERE (`IS_DONE`=0 or `IS_REPEATING`) and clnd_events.`ID`<>".$rec['ID']." order by `TITLE`");
 }
 
 echo "."; //???? без этого не работает
