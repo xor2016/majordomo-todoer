@@ -949,7 +949,55 @@ function  data_out($what='all')
         }
         return $res;
     }
-
+function api($params) {
+        if ($params['request'][0]=='query') {
+            $query = $params['query'];
+            $result = SQLSelect($query);
+            //debmes($result,'todoer');
+            return $result;
+        }
+        if ($params['request'][0]=='tasks') {
+         	if(isset($params['filter'])) {
+			//filter -> all, today, soon, latest, recently_done, done, overdue, nodate или явное выражение sql для фильтра where
+				$qry = "1=1";
+				$what = trim($params['filter']);
+				if($what == "all" || $what == ''){
+					$qry .= "";
+				}elseif($what == "today"){
+					$qry .= " and TO_DAYS(DUE)<=TO_DAYS(NOW()) and TO_DAYS(END_TIME)>=TO_DAYS(NOW()) and IS_NODATE=0 and AT_CALENDAR=1";
+				}elseif($what == "soon"){
+					$qry .= " and TO_DAYS(DUE)>=TO_DAYS(NOW())+1 and TO_DAYS(END_TIME)>=TO_DAYS(NOW())+1 and IS_NODATE=0 AND TO_DAYS(DUE)<=TO_DAYS(NOW())+".SETTINGS_TODOER_SOONLIMIT."  and AT_CALENDAR=1";
+				}elseif($what == "latest"){//недавно
+					$qry .= " and TO_DAYS(DUE)<=TO_DAYS(NOW()) and IS_NODATE=0 AND TO_DAYS(DUE)>=TO_DAYS(NOW())- 7  and AT_CALENDAR=1";
+				}elseif($what == "nodate"){
+					$qry .= " and IS_NODATE=1 and AT_CALENDAR=1";
+				}elseif($what == "overdue"){
+					$qry .= " and IS_DONE=2 AND holidays=0 and AT_CALENDAR=1";
+				}elseif($what == "recently_done"){		//recently done
+					$qry .= " and ((IS_DONE=1 AND TO_DAYS(NOW())-TO_DAYS(DONE_WHEN)<=1) OR (IS_REPEATING=1 AND NOW() between END_TIME and DUE)) and AT_CALENDAR=1";
+				}elseif($what == "done"){		
+					$qry .= " and IS_DONE=1 and AT_CALENDAR=1";
+				}elseif($what == "between"){
+		            if(isset($params['from'])) {
+						$from = date('Y-m-d H:i:00',$params['from']);
+					}else{
+						$from = date('Y-m-d H:i:00');
+					}
+		            if(isset($params['to'])) {
+						$to = date('Y-m-d H:i:00',$params['to']);
+					}else{
+						$to = date('Y-m-d H:i:00');
+					}	
+					$qry .= " and DUE <='$to' and END_TIME >= '$from' and AT_CALENDAR=1 and IS_NODATE=0";
+				}else{//free form
+					$qry .= " ".$what ;
+				}
+				$result = SQLSelect("SELECT clnd_events.*,clnd_categories.TITLE as CATEGORY,clnd_categories.ICON,clnd_categories.holidays CAT_HDAYS,clnd_categories.AT_CALENDAR, (SELECT COUNT( d.ID ) FROM clnd_events d WHERE d.parent_id = clnd_events.id ) IS_MAIN FROM clnd_events left join clnd_categories ON clnd_events.calendar_category_id=clnd_categories.id WHERE $qry ORDER BY IS_NODATE DESC,DUE");
+				//debmes($result,'todoer');
+				return $result;
+			}
+        }
+}
 /**
 * Install
 *
