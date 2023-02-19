@@ -670,37 +670,53 @@ if($task['IS_NODATE']){
 	$rec['IS_NODATE'] = 0;
     if($task['ALL_DAY']){
 	  $rec['ALL_DAY'] = 1;
-      $task['DUE']?$rec['DUE'] = $task['DUE']:$rec['DUE'] = date('Y-m-d 00:00:00');
-	  $task['END_TIME']?$rec['END_TIME'] = $task['END_TIME']:$rec['END_TIME'] = date('Y-m-d 23:59:00');
+      $rec['DUE'] = $task['DUE']?$task['DUE']:date('Y-m-d 00:00:00');
+	  $rec['END_TIME'] = $task['END_TIME']? $task['END_TIME']: date('Y-m-d 23:59:00');
     }else{
       $rec['ALL_DAY'] = 0;
-	  $task['DUE']?$rec['DUE'] = $task['DUE']:$rec['DUE'] = date('Y-m-d H:i:00');
-	  $task['END_TIME']?$rec['END_TIME'] = $task['END_TIME']:$rec['END_TIME'] = date('Y-m-d H:i:00');
+	  $rec['DUE'] = $task['DUE']?$task['DUE']: date('Y-m-d H:i:00');
+	  $rec['END_TIME'] = $task['END_TIME']?$task['END_TIME']:date('Y-m-d H:i:00');
     }
 }
 
 if($task['NOTES'])$rec['NOTES'] = $task['NOTES'];
-if($task['IS_REPEATING'])$rec['IS_REPEATING'] = $task['IS_REPEATING'];
-if($task['REPEAT_TYPE'])$rec['REPEAT_TYPE'] = $task['REPEAT_TYPE'];
-if($task['REPEAT_IN'])$rec['REPEAT_IN'] = $task['REPEAT_IN'];
+$rec['IS_REPEATING'] = $task['IS_REPEATING'] ? $task['IS_REPEATING']:0;
+$rec['REPEAT_TYPE'] = $task['REPEAT_TYPE'] ? $task['REPEAT_TYPE']:0;
+$rec['REPEAT_IN'] = $task['REPEAT_IN'] ? $task['REPEAT_IN']:0;
+$rec['IS_REPEAT_UNTIL'] = $task['IS_REPEAT_UNTIL'] ? $task['IS_REPEAT_UNTIL']:0;
+$rec['IS_CRON'] = $task['IS_CRON'] ? $task['IS_CRON']:0;
 if($task['BEGIN_CODE'])$rec['BEGIN_CODE'] = $task['BEGIN_CODE'];
 if($task['DONE_CODE'])$rec['DONE_CODE'] = $task['DONE_CODE'];
-if($task['AUTODONE'])$rec['AUTODONE'] = $task['AUTODONE'];
-$task['REPEAT_UNTIL']?$rec['REPEAT_UNTIL'] = $task['REPEAT_UNTIL']:$rec['REPEAT_UNTIL'] = date('Y-m-d H:i:00');
-$task['REMIND_TIME']?$rec['REMIND_TIME'] = $task['REMIND_TIME']:$rec['REMIND_TIME'] = date('Y-m-d H:i:00');
+$rec['AUTODONE'] = $task['AUTODONE'] ? $task['AUTODONE']:0;
+$rec['REPEAT_UNTIL'] = $task['REPEAT_UNTIL']? $task['REPEAT_UNTIL']: date('Y-m-d H:i:00');
+$rec['REMIND_IN'] = $task['REMIND_IN'] ? $task['REMIND_IN']:0;
 if($task['REMIND_TIME']){
+   $rec['REMIND_TIME'] = $task['REMIND_TIME'];
    $rec['IS_REMIND'] = 1;
    $rec['REMIND_TIMER'] = 10;
+}else{
+   $rec['REMIND_TIME'] = date('Y-m-d H:i:00');
+   $rec['IS_REMIND'] = 0;
+   $rec['REMIND_TIMER'] = 0;
 }
 if($task['CATEGORY']){
-	$cat = SQLSELECTONE("select * from clnd_categories where title like '%".dbsafe($task['CATEGORY'])."%'");
+	$cat = SQLSELECTONE("select * from clnd_categories where title like '%". dbsafe($task['CATEGORY']) ."%'");
 	if($cat){
 		$rec['CALENDAR_CATEGORY_ID'] = $cat['ID'];
 	}
+}else{
+  	$rec['CALENDAR_CATEGORY_ID'] = 0;
 }
-//if($task['CATEGORY_ID'])$rec['CATEGORY_ID'] = $task['CATEGORY_ID'];
+
 $rec['ADDED'] = date('Y-m-d H:i:s');
 if($task['EX_ID'])$rec['EX_ID'] = $task['EX_ID'];
+$rec['IS_DONE'] = $task['IS_DONE'] ? $task['IS_DONE']:0;
+$rec['USER_ID'] = $task['USER_ID'] ? $task['USER_ID']:0;
+$rec['PARENT_ID'] = $task['PARENT_ID'] ? $task['PARENT_ID']:0;
+$rec['AUTODONE_BY_CHILDS'] = $task['AUTODONE_BY_CHILDS'] ? $task['AUTODONE_BY_CHILDS']:0;
+$rec['IS_BEGIN'] = $task['IS_BEGIN'] ? $task['IS_BEGIN']:0;
+$rec['LOCATION_ID'] = $task['LOCATION_ID'] ? $task['LOCATION_ID']:0;
+
 return SQLInsert('clnd_events', $rec);
 }
 /**
@@ -950,9 +966,15 @@ function  data_out($what='all')
         return $res;
     }
 function api($params) {
+        //debmes($params,'todoer');
         if ($params['request'][0]=='query') {
             $query = $params['query'];
             $result = SQLSelect($query);
+            //debmes($result,'todoer');
+            return $result;
+        }
+        if ($params['request'][0]=='categories') {
+            $result = SQLSelect("SELECT * FROM clnd_categories");
             //debmes($result,'todoer');
             return $result;
         }
@@ -964,19 +986,19 @@ function api($params) {
 				if($what == "all" || $what == ''){
 					$qry .= "";
 				}elseif($what == "today"){
-					$qry .= " and TO_DAYS(DUE)<=TO_DAYS(NOW()) and TO_DAYS(END_TIME)>=TO_DAYS(NOW()) and IS_NODATE=0 and AT_CALENDAR=1";
+					$qry .= " and TO_DAYS(DUE)<=TO_DAYS(NOW()) and TO_DAYS(END_TIME)>=TO_DAYS(NOW()) and IS_NODATE=0 and (AT_CALENDAR=1 or clnd_categories.id is null)";
 				}elseif($what == "soon"){
-					$qry .= " and TO_DAYS(DUE)>=TO_DAYS(NOW())+1 and TO_DAYS(END_TIME)>=TO_DAYS(NOW())+1 and IS_NODATE=0 AND TO_DAYS(DUE)<=TO_DAYS(NOW())+".SETTINGS_TODOER_SOONLIMIT."  and AT_CALENDAR=1";
+					$qry .= " and TO_DAYS(DUE)>=TO_DAYS(NOW())+1 and TO_DAYS(END_TIME)>=TO_DAYS(NOW())+1 and IS_NODATE=0 AND TO_DAYS(DUE)<=TO_DAYS(NOW())+".SETTINGS_TODOER_SOONLIMIT."  and (AT_CALENDAR=1 or clnd_categories.id is null)";
 				}elseif($what == "latest"){//недавно
-					$qry .= " and TO_DAYS(DUE)<=TO_DAYS(NOW()) and IS_NODATE=0 AND TO_DAYS(DUE)>=TO_DAYS(NOW())- 7  and AT_CALENDAR=1";
+					$qry .= " and TO_DAYS(DUE)<=TO_DAYS(NOW()) and IS_NODATE=0 AND TO_DAYS(DUE)>=TO_DAYS(NOW())- 7  and (AT_CALENDAR=1 or clnd_categories.id is null)";
 				}elseif($what == "nodate"){
-					$qry .= " and IS_NODATE=1 and AT_CALENDAR=1";
+					$qry .= " and IS_NODATE=1 and (AT_CALENDAR=1 or clnd_categories.id is null)";
 				}elseif($what == "overdue"){
-					$qry .= " and IS_DONE=2 AND holidays=0 and AT_CALENDAR=1";
+					$qry .= " and IS_DONE=2 AND holidays=0 and (AT_CALENDAR=1 or clnd_categories.id is null)";
 				}elseif($what == "recently_done"){		//recently done
-					$qry .= " and ((IS_DONE=1 AND TO_DAYS(NOW())-TO_DAYS(DONE_WHEN)<=1) OR (IS_REPEATING=1 AND NOW() between END_TIME and DUE)) and AT_CALENDAR=1";
+					$qry .= " and ((IS_DONE=1 AND TO_DAYS(NOW())-TO_DAYS(DONE_WHEN)<=1) OR (IS_REPEATING=1 AND NOW() between END_TIME and DUE)) and (AT_CALENDAR=1 or clnd_categories.id is null)";
 				}elseif($what == "done"){		
-					$qry .= " and IS_DONE=1 and AT_CALENDAR=1";
+					$qry .= " and IS_DONE=1 and (AT_CALENDAR=1 or clnd_categories.id is null)";
 				}elseif($what == "between"){
 		            if(isset($params['from'])) {
 						$from = date('Y-m-d H:i:00',$params['from']);
@@ -988,7 +1010,7 @@ function api($params) {
 					}else{
 						$to = date('Y-m-d H:i:00');
 					}	
-					$qry .= " and DUE <='$to' and END_TIME >= '$from' and AT_CALENDAR=1 and IS_NODATE=0";
+					$qry .= " and DUE <='$to' and END_TIME >= '$from' (AT_CALENDAR=1 or clnd_categories.id is null) and IS_NODATE=0";
 				}else{//free form
 					$qry .= " ".$what ;
 				}

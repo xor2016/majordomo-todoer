@@ -17,8 +17,8 @@
 		SQLExec("DELETE FROM clnd_events WHERE ID='".(int)$rec['ID']."'");
 		//освободим подчиненные задачи
 		SQLExec("UPDATE clnd_events SET PARENT_ID=0 WHERE PARENT_ID='".$rec['ID']."'");
-	$this->redirect("?data_source=clnd_events");
-}
+		$this->redirect("?data_source=clnd_events");
+	}
 
   } else { 
 	//add new by title
@@ -125,7 +125,7 @@
    }
 
    global $remind_type; // сказать/выполнить код
-   $rec['REMIND_TYPE'] = $remind_type;
+   $rec['REMIND_TYPE'] = (int)$remind_type;
 
    global $remind_code; //код напоминания
    $rec['REMIND_CODE'] = $remind_code;
@@ -143,10 +143,10 @@
     }
 
    global $autodone; //признак автоматическое завершение при старте задачи
-   $rec['AUTODONE'] = $autodone;
+   $rec['AUTODONE'] = (int)$autodone;
  
    global $remind_in;//напомнить за remind_in мин/час/дней ???
-   $rec['REMIND_IN'] = $remind_in;
+   $rec['REMIND_IN'] = (int)$remind_in;
 
    global $remind_timer; // 0..10 мин/час/дней/как явно указано в REMIND_TIME
    $rec['REMIND_TIMER'] = $remind_timer;
@@ -173,16 +173,16 @@
 
    }
    global $parent_id;//главная задача
-   $rec['PARENT_ID'] = $parent_id;
+   $rec['PARENT_ID'] = (int)$parent_id;
 
    global $autodone_by_childs;//для главной - автоматическое завершение по готовности подзадач
-   $rec['AUTODONE_BY_CHILDS'] = $autodone_by_childs;
+   $rec['AUTODONE_BY_CHILDS'] = (int)$autodone_by_childs;
 
    global $log;
    $rec['LOG'] = $log;
 
    global $is_repeat_until;//признак проверки окончания повторов
-   $rec['IS_REPEAT_UNTIL'] = $is_repeat_until;
+   $rec['IS_REPEAT_UNTIL'] = (int)$is_repeat_until;
 
    global $repeat_until;//повторять до
    $rec['REPEAT_UNTIL'] = $repeat_until;
@@ -194,7 +194,7 @@
    $rec['BEGIN_CODE'] = $begin_code;
 
    global $is_cron;//признак использования синтаксиса Крона для повторов
-   $rec['IS_CRON'] = $is_cron;
+   $rec['IS_CRON'] = (int)$is_cron;
 
    global $repeat_cron;//строка синтаксиса Крона для повторов
    $rec['REPEAT_CRON'] = $repeat_cron;
@@ -208,6 +208,7 @@
     } else {
 
      $rec['ADDED'] = date('Y-m-d H:i:s');
+     //debmes($rec,'todoer');
      $rec['ID'] = SQLInsert('clnd_events', $rec);
     }
 
