@@ -1010,7 +1010,7 @@ function api($params) {
 					}else{
 						$to = date('Y-m-d H:i:00');
 					}	
-					$qry .= " and DUE <='$to' and END_TIME >= '$from' (AT_CALENDAR=1 or clnd_categories.id is null) and IS_NODATE=0";
+					$qry .= " and DUE <='$to' and END_TIME >= '$from' and (AT_CALENDAR=1 or clnd_categories.id is null) and IS_NODATE=0";
 				}else{//free form
 					$qry .= " ".$what ;
 				}
