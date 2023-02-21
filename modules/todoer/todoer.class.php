@@ -974,6 +974,19 @@ function api($params) {
             return $result;
         }
         if ($params['request'][0]=='categories') {
+            if ($params['request'][1]=='add' || $params['request'][1]=='edit') {
+                $value = json_decode($params["value"],true);
+                if ($value["ID"])
+                    SQLUpdate("clnd_categories", $value); // update
+                else
+                    $value["ID"] = SQLInsert("clnd_categories", $value); // adding new record
+                return $value;
+            }
+            if ($params['request'][1]=='delete') {
+				SQLExec("DELETE FROM clnd_categories WHERE ID='" . $params['request'][2] . "'");
+				SQLExec("UPDATE clnd_events set calendar_category_id=0 WHERE calendar_category_id='" . $params['request'][2] . "'");
+                return "ok";
+            }
             $result = SQLSelect("SELECT * FROM clnd_categories");
             //debmes($result,'todoer');
             return $result;
@@ -1109,6 +1122,8 @@ clnd_categories - Categories
  clnd_categories: AT_CALENDAR tinyint(1) NOT NULL DEFAULT 0
  clnd_categories: CALENDAR_COLOR int(11) NOT NULL DEFAULT 0
  clnd_categories: HOLIDAYS tinyint(1) NOT NULL DEFAULT 0
+ clnd_categories: COLOR varchar(20) NULL
+
  
 EOD;
   parent::dbInstall($data);
