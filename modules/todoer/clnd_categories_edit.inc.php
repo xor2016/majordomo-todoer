@@ -17,12 +17,17 @@
     $ok=0;
    }
   //updating 'ACTIVE' (int)
-   global $active;
-   $rec['ACTIVE']=(int)$active;
+   //global $active;
+   //$rec['ACTIVE']=(int)$active;
   //updating 'PRIORITY' (int)
-   global $priority;
-   $rec['PRIORITY']=(int)$priority;
-	global $holidays;
+   //global $priority;
+   //$rec['PRIORITY']=(int)$priority;
+   global $color;
+   $rec['COLOR']=$color;
+   global $at_calendar;
+   $rec['AT_CALENDAR']=(int)$at_calendar;
+
+   global $holidays;
    $rec['HOLIDAYS']=(int)$holidays;
   //UPDATING RECORD
    if ($ok) {

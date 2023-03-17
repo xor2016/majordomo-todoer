@@ -79,8 +79,8 @@
    if ($is_nodate) {
     $rec['IS_REPEATING']=0; //ignore sets
     $rec['ALL_DAY']=0;
-    $rec['END_TIME'] = null;
-    $rec['DUE'] = null;
+    $rec['END_TIME'] = date('Y-m-d 00:00:00');
+    $rec['DUE'] = date('Y-m-d 00:00:00');
     $all_day = 0;
    }
 
@@ -111,6 +111,9 @@
 
    global $calendar_category_id;
    $rec['CALENDAR_CATEGORY_ID']=(int)$calendar_category_id;
+
+   global $location_id;
+   $rec['LOCATION_ID']=(int)$location_id;
 
    global $done_code;//код при закрытии задачи (is_done ставится в 1)
    $rec['DONE_CODE'] = $done_code;
@@ -203,10 +206,11 @@
 }
        
    if ($ok) {
+    $out['OK'] = 1;
     if ($rec['ID']) {
      SQLUpdate('clnd_events', $rec);
     } else {
-
+    $out['OK'] = 1;
      $rec['ADDED'] = date('Y-m-d H:i:s');
      //debmes($rec,'todoer');
      $rec['ID'] = SQLInsert('clnd_events', $rec);
@@ -220,9 +224,8 @@
    }
 
   $out['DONE_WHEN'] = date('d.m.Y H:i:00',strtotime($rec['DONE_WHEN']));
-  //outHash($rec, $out);
   $out['USERS'] = SQLSelect("SELECT * FROM users ORDER BY NAME");
-  //$out['LOCATIONS']=SQLSelect("SELECT * FROM gpslocations ORDER BY TITLE");
+  $out['LOCATIONS']=SQLSelect("SELECT ID, TITLE FROM gpslocations ORDER BY TITLE");
   $out['CALENDAR_CATEGORIES'] = SQLSelect("SELECT ID, TITLE from clnd_categories ORDER BY TITLE");
 //обработка дней недели
 $w_days = array();

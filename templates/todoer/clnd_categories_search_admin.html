@@ -1,168 +1,39 @@
-<script language="javascript">
- $('.workdays').click (function ()
-  {
-  var thisCheck = $(this);
-  if (thisCheck.is(':checked')) {
-   var url="holidays=2&id=";
-   url=url+thisCheck.val();
-  } else {
-   var url="holidays=0&calendar_color=0&id=";
-   url=url+thisCheck.val();
-  }
-  url= "/modules/todoer/todoer_update.php?" + url;
-  $.ajax({
-   url: url,
-   cache: false,
-   success: function(html){
-
-  }
-});
-});
-</script>
-
-<script language="javascript">
- $('.holidays').click (function ()
-  {
-  var thisCheck = $(this);
-  if (thisCheck.is(':checked')) {
-   var url="holidays=1&id=";
-   url=url+thisCheck.val();
-  } else {
-   var url="holidays=0&calendar_color=0&id=";
-   url=url+thisCheck.val();
-  }
-  url= "/modules/todoer/todoer_update.php?" + url;
-  $.ajax({
-   url: url,
-   cache: false,
-   success: function(html){
-
-  }
-});
-
-
- }
- );
-</script>
-
-<script language="javascript">
-function SaveColor(selectObject,category_id)
-  {
-  var url="calendar_color=";
-  url=url+selectObject.value;
-  url=url+"&id="+ category_id;
-  if (selectObject.value=="0") {
-   url=url+"&at_calendar=0";
-  }
-  else {
-   url=url+"&at_calendar=1";
-  }
-  url= "/modules/todoer/todoer_update.php?" + url;
-  
-
-  switch(selectObject.value) {
-    case "0":
-       selectObject.style.backgroundColor = "#FFFFFF";
-        break;
-    case "1":
-       selectObject.style.backgroundColor = "#5cb85c";
-        break;
-    case "2":
-        selectObject.style.backgroundColor = "#428bca";
-        break;
-    case "3":
-        selectObject.style.backgroundColor = "#555555";
-        break;
-    case "4":
-        selectObject.style.backgroundColor = "#f0ad4e";
-        break;
-    case "5":
-        selectObject.style.backgroundColor = "#d9534f";
-        break;
-
-  }
-  $.ajax({
-   url: url,
-   cache: false,
-   success: function(html){
-
-  }
-});
-
-}
-</script>
-
-<style>
-.info { 
- padding: 10px;
- border: 1px dashed #000;
- display: inline-block;
- border-radius: 5px;
- background: #f8f8ff;
-}
-.form-control { 
- -webkit-appearance: none;
- -moz-appearance: none;
- -ms-appearance: none;
- appearance: none !important;
- box-shadow: none !important;
-}
-#tooltip { border-bottom: 1px dashed #000; }
-.table tbody>tr>td { vertical-align: middle; }
-</style>
 
 <br>
 <a href="?view_mode=edit_clnd_categories&data_source=<#DATA_SOURCE#>" class="btn btn-primary"><i class="glyphicon glyphicon-plus"></i> Добавить категорию</a>
 
 <br><br>
-
-<table width=100% border=0><tr>
-<td valign=top>
-<!-- results -->
 [#if RESULT#]
-<!-- search results (list) -->
-<form action="?" method="post" name="frmList_clnd_categories" style="padding:0px">
-<table class="table table-hover">
-<tr class="active">
-<script>
-$('#tooltip').ready(function(){
-$('[data-toggle="tooltip"]').tooltip();
-});
-</script>
-<th class="text-center" style="width: 100px;">Иконка</th><th style="width: 100px;" class="text-center"><span id="tooltip" data-toggle="tooltip" title="Цвет рамки в Календаре на год">Цвет рамки</span></th><th>Категория</th><th style="width: 3%;" class="text-center"><span id="tooltip" data-toggle="tooltip" title="1 для выходных, 2 для рабочих">Праздники</span></th><th class="text-center">Опции</th>
-</tr>
+<table class="table table-condensed table-striped">
+<thead class="thead-light">
+ <tr>
+  <td><b>Иконка</b></td>
+  <td><b>Категория</b></td>
+  <td><b>Цвет</b></td>
+  <td><b>Показ в календаре</b></td>
+  <td><b>Опции</b></td>
+  <td>&nbsp;</td>
+ </tr>
+</thead>
+<tbody>
 [#begin RESULT#]
 <tr>
-<td align="center">[#if ICON!=""#]<img style="max-height: 35px; width: 30px;" src="<#ROOTHTML#>cms/todoer/[#ICON#]">[#else#]<img style="width: 30px;" src="../cms/todoer/default.png">[#endif ICON#]</td>
-<td align="center"><select name="color[#ID#]" class="form-control calendar_color" value="[#CALENDAR_COLOR#]" onchange="SaveColor(this,[#ID#])" style="width: 40px; background-color: [#if CALENDAR_COLOR==0#]#FFFFFF[#endif CALENDAR_COLOR#][#if CALENDAR_COLOR==1#]#5cb85c[#endif CALENDAR_COLOR#][#if CALENDAR_COLOR==2#]#428bca[#endif CALENDAR_COLOR#][#if CALENDAR_COLOR==3#]#555555[#endif CALENDAR_COLOR#][#if CALENDAR_COLOR==4#]#f0ad4e[#endif CALENDAR_COLOR#][#if CALENDAR_COLOR==5#]#d9534f[#endif CALENDAR_COLOR#]">
- <option value="0" style="background-color: #ffffff" [#if CALENDAR_COLOR==0#] selected [#endif CALENDAR_COLOR#]></option>
- <option value="1" style="background-color: #5cb85c" [#if CALENDAR_COLOR==1#] selected [#endif CALENDAR_COLOR#]> </option>
- <option value="2" style="background-color: #428bca" [#if CALENDAR_COLOR==2#] selected [#endif CALENDAR_COLOR#]> </option>
- <option value="3" style="background-color: #555555" [#if CALENDAR_COLOR==3#] selected [#endif CALENDAR_COLOR#]> </option>
- <option value="4" style="background-color: #f0ad4e" [#if CALENDAR_COLOR==4#] selected [#endif CALENDAR_COLOR#]> </option>
- <option value="5" style="background-color: #d9534f" [#if CALENDAR_COLOR==5#] selected [#endif CALENDAR_COLOR#]> </option>
-</select>
-</td>
+<td align="left">[#if ICON!=""#]<img style="max-height: 35px; width: 30px;" src="<#ROOTHTML#>cms/todoer/[#ICON#]">[#else#]<img style="width: 30px;" src="../cms/todoer/default.png">[#endif ICON#]</td>
 <td><b>[#TITLE#]</b></td>
-<td>[#HOLIDAYS#]</td>
-<td width="150" align="center">
- 
+<td><b>[#if COLOR!=""#] <span class="badge" style="background-color:[#COLOR#];">...</span>[#endif#]</b></td>
+<td><b>[#if AT_CALENDAR="1"#]Да[#else#]--[#endif#]</b></td>
+<td>[#if HOLIDAYS="1"#]<b>Праздники</b>[#else#][#if HOLIDAYS="2"#]<b>Рабочие дни</b>[#else#][#if HOLIDAYS="3"#]<b>Архив</b>[#else#]Обычная категория[#endif#][#endif#][#endif#]</td>
+<td>
   [#if "<#ACTION#>"=="admin"#]
-  
-    <b><a  class="btn btn-default btn-sm" href="?data_source=<#DATA_SOURCE#>&view_mode=edit_clnd_categories&id=[#ID#]" title="<#LANG_EDIT#>"><i class="glyphicon glyphicon-pencil"></i></a></b>
-  
-    
-  [#if !RESULT#]
-
-    <a  class="btn btn-default btn-sm" href="?data_source=<#DATA_SOURCE#>&view_mode=delete_clnd_categories&id=[#ID#]" onClick="return confirm('<#LANG_ARE_YOU_SURE#>')" title="<#LANG_DELETE#>"><i class="glyphicon glyphicon-remove"></i></a>
-  
-  [#endif RESULT#]
+     <a  class="btn btn-default btn-sm" href="?data_source=<#DATA_SOURCE#>&view_mode=edit_clnd_categories&id=[#ID#]" title="<#LANG_EDIT#>"><i class="glyphicon glyphicon-pencil"></i></a>
+     <a  class="btn btn-default btn-sm" href="?data_source=<#DATA_SOURCE#>&view_mode=delete_clnd_categories&id=[#ID#]" onClick="return confirm('<#LANG_ARE_YOU_SURE#>')" title="<#LANG_DELETE#>"><i class="glyphicon glyphicon-remove"></i></a>
   [#endif ACTION#]
  </td>
-</tr>
 
-[#end RESULT#]
-</table>
+</tr>
+ [#end RESULT#]
+</tbody>
+</table>   
 
 
 <input type="hidden" name="data_source" value="<#DATA_SOURCE#>">
@@ -175,4 +46,4 @@ $('[data-toggle="tooltip"]').tooltip();
 </p>
 [#endif RESULT#]
 <!-- / results -->
-</td></tr></table>
+

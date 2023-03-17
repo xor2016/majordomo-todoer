@@ -38,7 +38,7 @@
    }
    $session->data['clnd_categories_sort']=$sortby_clnd_categories;
   }
-  if (!$sortby_clnd_categories) $sortby_clnd_categories="PRIORITY DESC, TITLE";
+  if (!$sortby_clnd_categories) $sortby_clnd_categories=" TITLE";
   $out['SORTBY']=$sortby_clnd_categories;
   // SEARCH RESULTS
   $res=SQLSelect("SELECT * FROM clnd_categories WHERE $qry ORDER BY ".$sortby_clnd_categories);
