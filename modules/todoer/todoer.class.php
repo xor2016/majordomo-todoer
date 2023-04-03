@@ -516,6 +516,7 @@ SQLUpdate('clnd_events', $rec);
 //exec end code
 	if($autoend){
 		if($rec['DONE_CODE']){
+			SQLExec("update clnd_events set LOG=concat(COALESCE(LOG,''),'" .date('d.m.y H:i:s') . " - скрипт при завершении<br>') where id = " . $rec['ID']);
             //$url = BASE_URL . '/objects/?system_call=1&job=' . $rec['ID'].time(). '&title=' . urlencode("todoerTaskDoneCode_".$rec['TITLE']) . '&command=' . urlencode($rec['DONE_CODE']);
             //getURLBackground($url);// testing - в фоне без ожидания результата (+ правка \objects\index.php)
 			try {
@@ -540,8 +541,11 @@ SQLUpdate('clnd_events', $rec);
 * @access public
 */
 function task_begin($id, $code="") {
-		SQLExec("update clnd_events set IS_BEGIN=1, LOG=concat(COALESCE(LOG,''),'".date('d.m.y H:i:s')." - старт.<br>') where id = $id");
+	$log = date('d.m.y H:i:s') . " - старт";
 	if($code){
+		$log .= " + скрипт";
+        //$url = BASE_URL . '/objects/?system_call=1&job=' . $id.time(). '&title=' . urlencode("todoerTaskBeginCode_".$id) . '&command=' . urlencode($code);
+        //getURLBackground($url);// testing - в фоне без ожидания результата (+ правка \objects\index.php)
 	
 		try {
 			$success = eval($code);//todo - safe mode to run
@@ -551,6 +555,7 @@ function task_begin($id, $code="") {
 			DebMes('Error: exception ' . get_class($e) . ', ' . $e->getMessage() . '.');
 		}
 	}
+	SQLExec("update clnd_events set IS_BEGIN=1, LOG=concat(COALESCE(LOG,''),'" . $log . "<br>') where id = " . $id);
 }
 function new_remind($rem_timer,$due,$all_day){
 	if((int)$rem_timer < 10){
@@ -795,13 +800,12 @@ function processSubscription($event, $details=''){
 */
 function create_new_task($task, $no_double=0){
 $rec = array();
-if($task['TITLE']){
-	$rec['TITLE'] = $task['TITLE'];
-}else{
-	return false;
+if(!$task['TITLE']){
+	$task['TITLE'] = 'Новая задача';
 }
+$rec['TITLE'] = $task['TITLE'];
 if($no_double){
-	SQLEXEC("delete from clnd_events where `TITLE`='".$task['TITLE']."'");
+	SQLEXEC("delete from clnd_events where `TITLE`='".$rec['TITLE']."'");
 }
 
 if($task['IS_NODATE']){
@@ -832,12 +836,12 @@ if($task['DONE_CODE'])$rec['DONE_CODE'] = $task['DONE_CODE'];
 $rec['AUTODONE'] = $task['AUTODONE'] ? $task['AUTODONE']:0;
 $rec['REPEAT_UNTIL'] = $task['REPEAT_UNTIL']? $task['REPEAT_UNTIL']:date('Y-m-d H:i:00');
 $rec['REMIND_IN'] = $task['REMIND_IN'] ? $task['REMIND_IN']:0;
-if((int)$task['IS_REMIND'] && (int)$task['REMIND_TIMER'] && $task['IS_NODATE'] == 0 ) {
-	$rec['REMIND_TIME'] = new_remind((int)$task['REMIND_TIMER'],$task['DUE'],(int)$task['ALL_DAY']);
+if($task['IS_REMIND']){
 	$rec['IS_REMIND'] = 1;
 	$rec['REMIND_TIMER'] = (int)$task['REMIND_TIMER'];
+	$rec['REMIND_TIME'] = $this->new_remind((int)$rec['REMIND_TIMER'],$rec['DUE'],(int)$rec['ALL_DAY']);
 }
-if($task['REMIND_TIME'] && !isset($task['REMIND_TIMER'])){ //??
+if($task['REMIND_TIME'] && !isset($rec['REMIND_TIMER'])){ //??
    $rec['REMIND_TIME'] = $task['REMIND_TIME'];
    $rec['IS_REMIND'] = 1;
    $rec['REMIND_TIMER'] = 10;
@@ -866,6 +870,7 @@ $rec['IS_BEGIN'] = $task['IS_BEGIN'] ? $task['IS_BEGIN']:0;
 $rec['LOCATION_ID'] = $task['LOCATION_ID'] ? $task['LOCATION_ID']:0;
 if($task['LAST_SYNCHRO']) $rec['LAST_SYNCHRO'] = $task['LAST_SYNCHRO'];
 $rec['LOG'] = date('d.m.y H:i:s')." - создано<br>";
+
 return SQLInsert('clnd_events', $rec);
 }
 
@@ -1164,39 +1169,38 @@ function api($params) {
 
 					//check task before
                     $old = sqlselectone("SELECT clnd_events.*,clnd_categories.TITLE as CATEGORY,clnd_categories.ICON,clnd_categories.holidays CAT_HDAYS,clnd_categories.AT_CALENDAR, (SELECT COUNT( d.ID ) FROM clnd_events d WHERE d.parent_id = clnd_events.id ) IS_MAIN FROM clnd_events left join clnd_categories ON clnd_events.calendar_category_id=clnd_categories.id WHERE clnd_events.id=".$value["ID"]);
-					$old['LOG'] .= date('d.m.y H:i:s')." - редактирование<br>";
+					$old['LOG'] .= date('d.m.y H:i:s')." - правка<br>";
 					if($value['ALL_DAY']){
 						$value['DUE'] = date('Y-m-d 00:00:00',strtotime($value['DUE']));
 						$value['END_TIME'] =  date('Y-m-d 23:59:00',strtotime($value['END_TIME']));
 					}
 					if($value['IS_NODATE']){
 						$value['AUTODONE'] = 0;
+						if((int)$value['IS_REMIND']) $value['REMIND_TIMER'] = 10;
 						$value['DUE'] = date('Y-m-d 00:00:00',strtotime($value['DUE']));
 						$value['END_TIME'] =  $value['DUE'];
 					}
 					if($old['IS_DONE'] == "1" && $value['IS_DONE']=="0"){
+						$value['DONE_WHEN'] = null;
 						$old['LOG'] .= date('d.m.y H:i:s')." - снят признак готовности<br>";
 					}
 					if($old['IS_DONE'] == "0" && $value['IS_DONE']=="1"){
+						$value['DONE_WHEN'] = date('d.m.y H:i:s');
 						$old['LOG'] .= date('d.m.y H:i:s')." - выполнено!<br>";
 					}
 					$value['LOG']  = $old['LOG'];
+
 					if((int)$value['IS_REMIND']) {
 						$value['REMIND_TIME'] = $this->new_remind((int)$value['REMIND_TIMER'], $value['DUE'], (int)$value['ALL_DAY']);
 					}
 					SQLUpdate("clnd_events", $value); // update
 				}else{
-					$value['ADDED'] = date('Y-m-d H:i:s');
-					if((int)$value['IS_REMIND']) {
-						$value['REMIND_TIME'] = $this->new_remind ((int)$value['REMIND_TIMER'], $value['DUE'], (int)$value['ALL_DAY']);
-					}
-					//debmes("add",'todoer');
-					//debmes($value,'todoer');
-                    //$value["ID"] = SQLInsert("clnd_events", $value); // adding new record
 					$value["ID"] = $this->create_new_task($value);
-					if(!$value["ID"]) return "Error";
+					if(!$value["ID"]) return false;
 				}
 				$result = SQLSelect("SELECT clnd_events.*,clnd_categories.TITLE as CATEGORY,clnd_categories.ICON,clnd_categories.holidays CAT_HDAYS,clnd_categories.AT_CALENDAR, (SELECT COUNT( d.ID ) FROM clnd_events d WHERE d.parent_id = clnd_events.id ) IS_MAIN FROM clnd_events left join clnd_categories ON clnd_events.calendar_category_id=clnd_categories.id WHERE clnd_events.id=".$value["ID"]);
+				debmes("api edt/add result",'todoer');
+				debmes($result,'todoer');
                 return $result;	
 	
 			}
