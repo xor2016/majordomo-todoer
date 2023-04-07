@@ -843,7 +843,7 @@ if($task['IS_REMIND']){
 }
 if($task['REMIND_TIME'] && !isset($rec['REMIND_TIMER'])){ //??
    $rec['REMIND_TIME'] = $task['REMIND_TIME'];
-   $rec['IS_REMIND'] = 1;
+   //$rec['IS_REMIND'] = 1;
    $rec['REMIND_TIMER'] = 10;
 }
 $rec['CALENDAR_CATEGORY_ID'] = 0;
@@ -1164,9 +1164,6 @@ function api($params) {
             if ($params['request'][1]=='add' || $params['request'][1]=='edit') {
 				$value = json_decode($_POST['value'],true);
                 if ($value["ID"]){//edit
-					//debmes("edit",'todoer');
-					//debmes($value,'todoer');
-
 					//check task before
                     $old = sqlselectone("SELECT clnd_events.*,clnd_categories.TITLE as CATEGORY,clnd_categories.ICON,clnd_categories.holidays CAT_HDAYS,clnd_categories.AT_CALENDAR, (SELECT COUNT( d.ID ) FROM clnd_events d WHERE d.parent_id = clnd_events.id ) IS_MAIN FROM clnd_events left join clnd_categories ON clnd_events.calendar_category_id=clnd_categories.id WHERE clnd_events.id=".$value["ID"]);
 					$old['LOG'] .= date('d.m.y H:i:s')." - правка<br>";
@@ -1199,16 +1196,14 @@ function api($params) {
 					if(!$value["ID"]) return false;
 				}
 				$result = SQLSelect("SELECT clnd_events.*,clnd_categories.TITLE as CATEGORY,clnd_categories.ICON,clnd_categories.holidays CAT_HDAYS,clnd_categories.AT_CALENDAR, (SELECT COUNT( d.ID ) FROM clnd_events d WHERE d.parent_id = clnd_events.id ) IS_MAIN FROM clnd_events left join clnd_categories ON clnd_events.calendar_category_id=clnd_categories.id WHERE clnd_events.id=".$value["ID"]);
-				debmes("api edt/add result",'todoer');
-				debmes($result,'todoer');
                 return $result;	
 	
 			}
             if ($params['request'][1]=='delete') {
                 if(isset($params['request'][2])){
                 	$this->delete_clnd_events($params['request'][2]);
+					return "ok";	
 				}
-                return "ok";				
 			}
             if ($params['request'][1]=='done') {
                 if(isset($params['request'][2])){
