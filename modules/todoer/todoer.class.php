@@ -158,14 +158,15 @@ function run() {
 
 
    foreach($settings as $k=>$v) {
-    $rec=SQLSelectOne("SELECT ID FROM settings WHERE NAME='".$v['NAME']."'");
-    if (!$rec['ID']) {
+    $rec = SQLSelectOne("SELECT ID FROM settings WHERE NAME='".$v['NAME']."'");
+    if (!isset($rec['ID'])) {//new 2023-10-01
      $rec['NAME']=$v['NAME'];
      $rec['VALUE']=$v['DEFAULT'];
      $rec['DEFAULTVALUE']=$v['DEFAULT'];
      $rec['TITLE']=$v['TITLE'];
      $rec['TYPE']=$v['TYPE'];
      $rec['DATA']=$v['DATA'];
+     $rec['NOTES'] = '';//new 2023-10-01
      $rec['ID']=SQLInsert('settings', $rec);
      Define('SETTINGS_'.$rec['NAME'], $v['DEFAULT']);
     }
