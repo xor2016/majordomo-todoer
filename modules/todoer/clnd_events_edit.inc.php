@@ -134,13 +134,13 @@
    $rec['REMIND_CODE'] = $remind_code;
 
    global $week_days;//дни недели для повторов
-   $rec['WEEK_DAYS'] = @implode(',', $week_days);
+   if (is_array($week_days)) $rec['WEEK_DAYS'] = @implode(',', $week_days);
    if (is_null($rec['WEEK_DAYS'])) {
         $rec['WEEK_DAYS'] = '';
     }
 
    global $y_months;//месяцы для повторов
-   $rec['YE_MONTHS'] = @implode(',', $y_months);
+   if (is_array($y_months)) $rec['YE_MONTHS'] = @implode(',', $y_months);
    if (is_null($rec['YE_MONTHS'])) {
         $rec['YE_MONTHS'] = '';
     }
